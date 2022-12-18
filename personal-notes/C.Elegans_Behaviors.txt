@@ -1,0 +1,98 @@
+-32 chemosensing neurons map to the "command interneurons" - AVA, AVB, AVD, AVE, and PVC
+	-AVA, AVB, AVD, AVE, PVC
+-both amphids contain 11 chemosensory neurons that react to attractive stimuli, and one thermosensory neuron (AFD)
+	-AFD
+-phasmids contain nerve endings of PHA and PHB and are used for chemosensory avoidance
+	-PHA, PHB
+-labial neurons IL1, IL2, OLL, OLQ, likely play some roll in sensory responses
+	-IL1, IL2, OLL, OLQ
+-ASE neurons detect soluble attractants
+	-ASE
+-AWA and AWC neurons detect volatile attractants
+	-AWA, AWC
+-ASH, ADL, and AWB neurons detect volatile repellants
+	-ASH, ADL, AWB
+-ASH neurons also detect soluble repellants
+	-ASH
+-PHA and PHB (neurons in phasmid) also seem to detect repulsive stimuli and coordinate avoidance responses by antagonizing ASH snesory neurons in amphid
+	-PHA, PHB
+-URX, AQR, and PQR seem to be involved in aerotaxis by detecting dissolved oxygen in body cavity fluids
+	-URX, AQR, PQR
+-BAG neurons are involved in avoidance of CO2
+	-BAG
+-amphid neurons ASI, ADF, ASJ, and ASG play a role to activate dauer formation and mainenance
+	-ASI, ADF, ASJ, ASG
+-ASH neurons directly connect to command interneurons for quick repulsive response, whereas AWA and AWC connect via other neurons and take much longer for attractive response
+	-ASH
+-aerotaxis also gets minor contributions from SDQ, ALN, and/or PLN neurons
+	-SDQ, ALN, PLN?
+-ASH seems to be a major noiceptive neurons, ADF seems to be serotonergic
+	-ASH, ADF
+-presence of food seems to increase overall levels of humoric serotonin, and possibly also affects neurons as a transmitter, as well
+-exogenous dopamine appears to play a roll in serotonin-dependant signal dampening
+-temperature is sensed by AFD neurons
+	-AFD
+-the hermaphrodite has three main types of locomotion: dwelling, area-restricted search, and dispersal
+-dwelling is when it doesn't move back or turn as much in presence of food, only moving slowly forward
+-area-restricted search is when food is gone and the worm moves with higher turn angles, larger frequency of reversals, and a tenfold general increase in locomotion
+-dispersal is when they are deprived of food for longer periods and reversal rates decrease with speed remaining high
+-AWC neurons are stimulated by odor removal, and naturally exist in an on state
+	-AWC
+-AIB and AIY form synapses with AWC, and AIB is also off-sensing; though AIY is on-sensing
+	-AIB, AIY, AWC
+-salt and temperature sensing neurons also synapse to AIY and AIB, allowing salt and temperature to modulate other chemotaxis
+	-AIY, AIB
+-salt sensing neurons ASEL and ASER are also organised in a similar ON-OFF manner, with ASEL as on-sensing, and ASER as off-sensing
+	-ASEL, ASER
+-notably, C. Elegans avoids serawattins, which are biosurfactants that are used in bacterial swarming moility
+-C. Elegans also learns to avoid toxic bacteria after pre-exposure, by means of seratonin neurons
+-nematocin is an oxytocin-like neuropeptie that increases probability of leaving food in presence of younger C. Elegans
+-the noiceptive neurons ASH and ADL seem to be responsible for sensing nematocin
+	-ASH, ADL
+-hermaphrodite males periodically release a cue that attracts male C. Elegans by causing them to reverse more frequently, and stop the characteristic male food-leaving behavior
+-HSN and VC motor neurons innervate vulval muscle cels to facilitate in egg-laying behaviors
+	-HSN, VC
+-egg laying behavior is modulated by environment, causing eggs to more frequently released in favorable conditions
+-timing and distancing between eggs depends on environmental conditions and homeostatic cues
+-in favorable conditions, eggs are normally laid every 1-2 minutes, seperated by longer quiescent periods of about 20 minutes
+-body touch sensors ALM and PLM often inhibits egg laying when activated, as do hypertonic salt solutions
+	-ALM, PLM
+-often before laying an egg, there is a burst of movement with an increase in velocity, and decrease in reversals (which persits during egg-laying period)
+-coordination of locomotion and egg-laying seems to involve HSN motor neurons giving feedback via interneurons in the brain that promote forward movement
+	-HSN
+-direct post-synaptic output of HSN is to AVF, which synapses onto the "forward" "command interneuron" AVB
+	-HSN, AVF, AVB
+-interference with serotonin transmission seems to stop velocity bursts during egg-laying events, implying HSN also modulate interneurons controlling locomotion during egg-laying
+-16 muscle cells are involved in egg-laying behavior, with the 4 vm2 cells being the most critical, as they receive significant synaptic input from neurons
+	-vm2
+-HSNs are hermaphrodite-specific and are critical to normal egg-laying behavior, with egg-laying defective mutants often having abnormal HSN neurons
+	-HSN
+-the HSNs are the major synaptic link between egg-laying mechanism and the rest of the nervous system, so likely also sends feedback to rest of nervous system
+	-HSN
+-despite this, the HSN doesn't seem to be involved in direct communication between head neurons and egg-laying neurons, suggesting an alternative route for regulatory feedback during egg-laying events
+	-HSN
+-this suggests humoral or other extrasynaptic modulation of vulval muscles and/or VCs may mediate the egg-laying behavior regulation
+	-vm2, VC
+-pheromone signals appear to underlie not only mating, but also diapause and aggregation, among other behaviors
+-hermphrodites seem to utlize chemosensory neurons to sense males and resist copulation
+-C. Elegans is also capable of a sleep-like state referred to as "lethargus", which lasts about 2.6 hours, and is characterized by less movement, and more aggressive locomotion when woken up
+-"lethargus" seems to cause a decrease in voluntary movements, increased thresholds for physical arousal, a relaxed posture, and homeostatic regulation
+-the sleep-active neuron RIS seems to induce lethargus, as it is most active at onset of sleep and can induce sleep if activated
+	-RIS
+-RIS seems to activate sleep by releasing GABA and inhibitory FLP-11 neuropeptides, similar to mammals
+	-RIS
+-disturbed sleep can lead to a more-easily activated RIS, also like in mammals, with sleep deprivation by mechanical stimulation causing lots of stress on C. Elegans
+	-RIS
+-C. Elegans can be woken by light mechanical stimulations, with repeated stimulations causing stress responses
+-mechanical stimulation always appears to cause RIS depolarization, with this being particularly pronounced during lethargus
+	-RIS
+-this means RIS activation may be product of mechanical stimulation and homeostatic sleep-pressure from sleep deprivation
+	-RIS
+-RIM interneurons, involved in reverse locomotion, can act as inhibitors of RIS when they are strongly depolarized and activators of RIS when lightly depolarized
+	-RIM, RIS
+-PVC command interneurons, involved in forward locomotion during wakefullness, act as major RIS activators
+	-PVC, RIS
+-these neurons act different during lethargus, with RIMs becoming less excitable, PVCs being resistant to inhibition and increased capacity to activate RIS
+	-RIM, PVC, RIS
+-seperate activation of PVC and RIM neurons does not seem to be sufficient for sleep-induction, rather they must act in concert to activate RIS
+	-RIM, PVC, RIS
