@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 const static int neuronCount = 302;
 const int maxSynapse = 500;
 const int commandInterneuronSize = 10;
@@ -31,13 +32,77 @@ struct connectome {
 
 connectome c;
 
+
+/*
+Getter function for the output of a given neuron in the matrix. Takes a cells ID, outputs a boolean value.
+*/
+bool getCellOutputFromMatrix(int targetID) {
+   return c.cellularMatrix[targetID].cellOutput;
+}
+
+/*
+Getter function for a given neuron in the cellular matrix. Takes a cells ID, outputs the neuron object.
+*/
+neuron getNeuronFromMatrix(int targetID) {								//function to get the neuron out of the connectome object's cellular matrix
+  return c.cellularMatrix[targetID];
+}
+
+/*
+Getter function for the threshold of a given neuron in the matrix. Takes a cells ID, outputs the integer threshold.
+*/
+int getCellThresholdFromMatrix(int targetID) {
+   return c.cellularMatrix[targetID].threshold;
+}
+
+/*
+Getter function for the length of a cells input array. Takes a cells ID, outputs an integer length.
+*/
+int getCellInputLenFromMatrix(int targetID) {
+   return c.cellularMatrix[targetID].inputsLen;
+}
+
+/*
+Getter function for the input array of a given cell. Takes a cells ID, outputs an array of the input IDs.
+*/
+int getInputFromMatrix(int neuronID, int inputID) {
+   return c.cellularMatrix[neuronID].inputs[inputID];
+}
+
+/*
+Getter function for the length of a cells weight array. Takes a cells ID, outputs an integer length.
+*/
+int getCellWeightLenFromMatrix(int targetID) {
+   return c.cellularMatrix[targetID].weightsLen;
+}
+
+/*
+Getter function for the weight array of a given cell. Takes a cells ID, outputs an array of the weight values.
+*/
+float getWeightFromMatrix(int neuronID, int weightID) {
+   return c.cellularMatrix[neuronID].weights[weightID];
+}
+
+/*
+Function to update the output arrays of neurons. Takes a cells ID and the output to be updated.
+*/
+void updateOutputArray(int cellID, bool outputVal) {
+    c.cellularMatrix[cellID].cellOutput = outputVal;
+}
+
 float calculateRandomWeight() {
     srand (static_cast <unsigned> (time(0)));
 
     float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     randomWeight = round (randomWeight * 100) / 1000;
 
-    return randomWeight;
+    int r = rand();
+    bool isPos = r % 2;
+
+    if (isPos) {
+        return randomWeight;
+    } else {
+        return -randomWeight;
+    }
 }
 
 void neuronToString(neuron n) {           //function to convert a neuron to a string in the data file

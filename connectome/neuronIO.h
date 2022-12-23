@@ -12,7 +12,8 @@ neuron commandInterneurons[commandInterneuronSize] = {
     c.cellularMatrix[56], c.cellularMatrix[57], c.cellularMatrix[173], c.cellularMatrix[174], c.cellularMatrix[54], c.cellularMatrix[55], c.cellularMatrix[58], c.cellularMatrix[59], c.cellularMatrix[60], c.cellularMatrix[61]
 };
 
-bool getMotorCellState() {
+
+bool getMotorCellState(int cellID) {
 	bool cmdInterneuronActivations[commandInterneuronSize] = {};
 
 	for (int i = 0; i < commandInterneuronSize; i++) {		//for every element in the list of motor neurons
@@ -23,37 +24,7 @@ bool getMotorCellState() {
 		}
 	}
 
-	return cmdInterneuronActivations[commandInterneuronSize];
-}
-
-void printMotorMatrix() {
-    ofstream motorIOfile;
-    motorIOfile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt", ios::out);
-
-    for (int i = 0; i < commandInterneuronSize; i++) {
-        if (commandInterneurons[i].cellOutput) {
-            cout << " [1]  ";
-            motorIOfile << "1" << '\n';
-        } else {
-            cout << " [0]  ";
-            motorIOfile << "0" << '\n';
-        }
-    }
-
-    motorIOfile.close();
-
-    cout << '\n';
-    cout << "^AVBL ";
-    cout << "^AVBR ";
-    cout << "^PVCL ";
-    cout << "^PVCR ";
-    cout << "^AVAL ";
-    cout << "^AVAR ";
-    cout << "^AVDL ";
-    cout << "^AVDR ";
-    cout << "^AVEL ";
-    cout << "^AVER ";
-    cout << '\n';
+	return cmdInterneuronActivations[cellID];
 }
 
 void doNoseTouch() {
