@@ -1,19 +1,12 @@
-//Authors: JoJo, Molly, Eonn, Kaiz - code created Dec. 2022
-
-//TODO: fix neuronToString() and use it to save new values to the matrix txt every tick
-//TODO: get printMotorOutput() to actually print to the file
-
-//TODO: generate large .txt file with neuron struct information
-//TODO: verify random weights are actually at proper values
+//TODO: something wrong with calculation of neuron outputs... they progress to true despite input after first tick
+//TODO: verify connectome is crunching numbers properly, saveNewState is actually saving updated values, etc
 //TODO: generate dataset of genetic cell weights for tuning
-//TODO: write "glial code" that tunes weights closer to their values based on whether initiated inputs caused their expected output values
-
-
+//TODO: write "glial code" that tunes weights closer to their "genetic values" based on whether initiated inputs created the expected output values
 
 /*
 ORDER OF STRETCH GOALS:
 
--weights initialized randomly between 0 and .1 (can use any found data sets as seed values for this)
+-weights initialized randomly between 0 and .1
 -weights can be moved down to minimum of -.1
 -weights are tuned constantly; if "genes" determine they need to be stronger or weaker, it adjusts via glia
 -LTP and LTD are represented in cell synapses over short periods
@@ -43,117 +36,78 @@ ORDER OF STRETCH GOALS:
         -gradient effects of metabotropic transmitters in 2d matrix
 */
 
+//Authors: JoJo, Molly, Eonn, Kaiz - code created Dec. 2022
+
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <algorithm>
 #include <cstdlib>
-#include <ctime>
 #include "neuronIO.h"
 
 
+/*
+Getter function for a given neuron in the cellular matrix. Takes a cells ID, outputs the neuron object.
+*/
 neuron getNeuronFromMatrix(int targetID) {								//function to get the neuron out of the connectome object's cellular matrix
   return c.cellularMatrix[targetID];
-/*	for (int i = 0; i < neuronCount - 1; i++) {		//for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {							//if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i];						//return the cell from the connectome's matrix
-		}
-   }
-   return c.cellularMatrix[1];*/
 }
 
+/*
+Getter function for the threshold of a given neuron in the matrix. Takes a cells ID, outputs the integer threshold.
+*/
 int getCellThresholdFromMatrix(int targetID) {
-	/*for (int i = 0; i < neuronCount - 1; i++) {		//for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {							//if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i].threshold;				//return the threshold value of the cell from the connectome's matrix
-		}
-   }
-   return 0;*/
    return c.cellularMatrix[targetID].threshold;
 }
 
+/*
+Getter function for the output of a given neuron in the matrix. Takes a cells ID, outputs a boolean value.
+*/
 bool getCellOutputFromMatrix(int targetID) {
-/*	for (int i = 0; i < neuronCount - 1; i++) {		//for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {							//if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i].cellOutput;				//return the output value of the cell from the connectome's matrix
-		}
-   }
-   return 0;*/
    return c.cellularMatrix[targetID].cellOutput;
 }
 
+/*
+Getter function for the length of a cells input array. Takes a cells ID, outputs an integer length.
+*/
 int getCellInputLenFromMatrix(int targetID) {
-/*	for (int i = 0; i < neuronCount - 1; i++) {		//for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {							//if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i].inputsLen;				//return the length of the matrix of inputs of the cell from the connectome's matrix
-		}
-   }
-   return 0;*/
    return c.cellularMatrix[targetID].inputsLen;
 }
 
+/*
+Getter function for the input array of a given cell. Takes a cells ID, outputs an array of the input IDs.
+*/
 int* getCellInputsFromMatrix(int targetID) {
-/*	for (int i = 0; i < neuronCount - 1; i++) {		                //for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {                   //if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i].inputs;     				//return the matrix of inputs of the cell from the connectome's matrix
-		}
-    }
-   return 0;*/
    return c.cellularMatrix[targetID].inputs;
 }
 
+/*
+Getter function for the length of a cells weight array. Takes a cells ID, outputs an integer length.
+*/
 int getCellWeightLenFromMatrix(int targetID) {
- /*   for (int i = 0; i < neuronCount - 1; i++) {		//for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {							//if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i].weightsLen;				//return the length of the matrix of inputs of the cell from the connectome's matrix
-		}
-   }
-   return 0;*/
    return c.cellularMatrix[targetID].weightsLen;
 }
 
+/*
+Getter function for the weight array of a given cell. Takes a cells ID, outputs an array of the weight values.
+*/
 float* getCellWeightsFromMatrix(int targetID) {
-/*	for (int i = 0; i < neuronCount - 1; i++) {		//for every cell in the matrix
-		neuron currentCell = c.cellularMatrix[i];				//make a copy of each cell and set it to a temporary variable
-		if (currentCell.cellID == targetID) {							//if the temporary cell's ID is the same as the target
-			return c.cellularMatrix[i].weights;				//return the matrix of weights of the cell from the connectome's matrix
-		}
-   }
-   return 0;*/
    return c.cellularMatrix[targetID].weights;
 }
 
-void initWeights() {
-    srand (static_cast <unsigned> (time(0)));
-
-    for (int i = 0; i < neuronCount; i++) {
-        for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
-            float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            c.cellularMatrix[i].weights[j] = randomWeight/10;
-        }
-    }
-}
-
+/*
+Function to print the entire matrix of cells.
+*/
 void printCellularMatrix() {
     int width = 17;
     int height = 18;
-    int neuronCounter = 0;
-
-    cout << '\n';
+    int neuronCounter = 1;
 
         for (int i = 0; i < height; i++) {
             for (int k = 0; k < width; k++) {
                 if (neuronCounter < neuronCount) {
-                    bool outputState = getCellOutputFromMatrix(neuronCounter);
-
-                    if (outputState) {
+                    if (c.cellularMatrix[neuronCounter].cellOutput) {
                         cout << "[1]";
                     } else {
                         cout << "[0]";
@@ -168,83 +122,108 @@ void printCellularMatrix() {
     cout << '\n';
 }
 
-bool activationFunction (int cellID) {          	//activation function calculator-- it tells you what output the weighted inputs into the given neuron make
-   float finalSummation = 0.0;
-   float neuronWeights[neuronCount] = {*c.cellularMatrix->weights};
-   int neuronInputs[neuronCount] = {*c.cellularMatrix->inputs};
+/*
+Function to calculate if a given cell fires. Takes a cells ID, outputs a boolean activation value.
+*/
+bool activationFunction (int cellID) {          	                    //activation function calculator-- it tells you what output the weighted inputs into the given neuron make
+    float finalSummation = 0.0;                                         //initalize function to hold final sum(Xi * Wi)
+    float neuronWeights[maxSynapse] = {*c.cellularMatrix->weights};     //make a matrix to hold all cell weights for a given neuron
+    float productMatrix[neuronCount];                                   //make a maktrix to hold all multiplied sums
+    int neuronInputs[maxSynapse] = {*c.cellularMatrix->inputs};         //make a matrix to hold all cell input IDs for a given neurons presynapses
+    int inputLen = getCellInputLenFromMatrix(cellID);                   //get the length of the input and weight matrix for a given neuron
 
-   float summationMatrix[neuronCount];	//multiply the input matrix by the weights matrix
+    bool inputValues[inputLen] = {};                                    //make an array to hold all boolean values for each presynaptic neuron input
 
-   for (int i = 0; i < neuronCount - 1; i++) {
-        summationMatrix[i] = neuronWeights[i] * neuronInputs[i];
-   }
-
-   for (int i = 0; i < getCellInputLenFromMatrix(cellID); i++) {		//for every input
-         finalSummation = finalSummation + summationMatrix[i];										//add their product to the running sum
+    for (int i = 0; i < inputLen; i++) {                                //iterate over the length of presynaptic inputs
+        inputValues[i] = getCellOutputFromMatrix(neuronInputs[i]);      //fill the presynaptic boolean matrix with every output value for each presynaptic neuron
     }
 
-   return finalSummation > getCellThresholdFromMatrix(cellID);					//if the running sum exceeds the cells threshold return true, else return false
+    for (int i = 0; i < maxSynapse; i++) {                              //iterate over all possible connections
+        productMatrix[i] = neuronWeights[i] * inputValues[i];           //fill a matrix with the product of the Wi and Xi values
+    }
+
+    for (int i = 0; i < inputLen; i++) {		                        //iterate over the length of presynaptic inputs
+        finalSummation += productMatrix[i];		                        //for every input add the product matrix to a running sum
+    }
+
+    if (finalSummation < getNeuronFromMatrix(cellID).threshold) {       //if the running sum is less than the given neurons threshold
+        return false;                                                   //return false
+    } else {                                                            //otherwise
+        return true;                                                    //return true
+    }
 }
 
-void updateInputArray(int targetNeuronID, bool outputVal) {								//update synapses of other neurons based on post-synaptic value of given neuron
-	for (int i = 0; i < neuronCount; i++) {						//for every cell in the connectome
+/*
+FUNCTION DEFUNCT IN CURRENT ARCHITECTURE
+Function to update the input synapses of other neurons connected to a given neuron. Takes a cells ID and the output value to be passed around.
+
+void updateInputArray(int targetNeuronID, bool outputVal) {				//update synapses of other neurons based on post-synaptic value of given neuron
+	for (int i = 0; i < neuronCount; i++) {						        //for every cell in the connectome
         int length = getCellInputLenFromMatrix(targetNeuronID);
-		for (int j = 0; j < length; j++) {		//and every input of the target neuron
-			if (getNeuronFromMatrix(i).inputs[j] == targetNeuronID) {		//check to see if the input cells correspond to the target neuron
-                getNeuronFromMatrix(i).inputs[j] = outputVal;   //if they do, update its value to be the new output value
+		for (int j = 0; j < length; j++) {		                        //and every input of the target neuron
+			if (getNeuronFromMatrix(i).inputs[j] == targetNeuronID) {	//check to see if the input cells correspond to the target neuron
+                getNeuronFromMatrix(i).inputs[j] = outputVal;           //if they do, update its value to be the new output value
 			}
 		}
 	}
-}
+}*/
 
+/*
+Function to update the output arrays of neurons. Takes a cells ID and the output to be updated.
+*/
 void updateOutputArray(int cellID, bool outputVal) {
     c.cellularMatrix[cellID].cellOutput = outputVal;
 }
 
-void setNextState() {                  			//function to update values in connectome to next state using the activation function
-  for (int i = 1; i < neuronCount; i++) {					//for every cell in the connectome
-
+/*
+Function to set the next tick of the connectome.
+*/
+void setNextState() {                  			        //function to update values in connectome to next state using the activation function
+  for (int i = 0; i < neuronCount; i++) {		        //for every cell in the connectome
       bool activationVal = activationFunction(i);
-      if (activationVal) {						//if the activation function of that cell returns true
-          c.outputs[i] = 1;									//save its output in the connectomes output matrix as true
-          updateInputArray(i, 1);						//update the rest of the cells that use that output value in the connectome
-	      updateOutputArray(i, 1);						//update the individual output value for that cell in the cells struct as well (not just in the connectomes matrix)
 
+      if (activationVal) {						        //if the activation function of that cell returns true
+          c.outputs[i] = 1;								//save its output in the connectomes output matrix as true
+//          updateInputArray(i, 1);						//update the rest of the cells that use that output value in the connectome
+	      updateOutputArray(i, 1);						//update the individual output value for that cell in the cells struct as well (not just in the connectomes matrix)
        } else {
-          c.outputs[i] = 0;									//otherwise save it as false
-          updateInputArray(i, 0);						//update the rest of the cells that use that output value in the connectome
+          c.outputs[i] = 0;								//otherwise save it as false
+//          updateInputArray(i, 0);						//update the rest of the cells that use that output value in the connectome
 	      updateOutputArray(i, 0);						//update the individual output value for that cell in the cells struct as well (not just in the connectomes matrix)
        }
   }
 }
 
+/*
+Function to save the current state of the connectomes cellular matrix to the matrix file.
+*/
 void saveNewState() {
-    for (int i = 0; i < neuronCount; i++) {
-        neuronToString(getNeuronFromMatrix(i));
+    for (int i = 0; i < neuronCount; i++) {             //for every cell in the connectome
+        neuronToString(getNeuronFromMatrix(i));         //call a function to write its data to a file
     }
 }
 
+/*
+Main function that runs connectome in a loop
+*/
 int main() {
-    initWeights();
-
-    for (int i = 1; i < neuronCount; i++) {
-        c.cellularMatrix[i] = neuralList[i];
+    for (int i = 1; i <= neuronCount; i++) {    //for every neuron in the network
+        c.cellularMatrix[i] = neuralList[i];    //load the neuron from a file into the matrix of the connectome
     }
 
-    bool activated = true;
+    bool activated = true;                      //declare a boolean to set connectome as 'on'
 
+    while (activated) {                         //while it's true run the connectome
+        getSensoryInputs();                     //get updated sensory information from a file
 
-    while (activated) {
-        getSensoryInputs();
-
-        printCellularMatrix();
+        printCellularMatrix();                  //print the connectome out
         cout << '\n';
 
-        printMotorMatrix();
+        printMotorMatrix();                     //print the motor cell matrix out
         cout << '\n';
 
-        setNextState();
-        saveNewState();
+        setNextState();                         //calculate next state of the connectome
+        saveNewState();                         //save the state of the connectome
     }
 
     return 0;
