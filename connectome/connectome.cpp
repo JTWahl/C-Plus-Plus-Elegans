@@ -1,6 +1,6 @@
-//TODO: why are all neurons off except nose touch, even with inputs??
-//TODO: why do inputs never seem to result in output values changing?
 //TODO: verify saveNewState() is actually saving updated info
+//TODO: why does only one input activate most of the outputs? Are the neurons in each sensory function wrong?
+//TODO: why does threshold have to be so low?
 //TODO: make code modular for any network!
 //TODO: update visual outputs to be more informative... graphics?
 
@@ -351,7 +351,7 @@ int main() {
         setNextState();                         //calculate next state of the connectome
         saveNewState();                         //save the state of the connectome
 
-        glialWeightTuning();                    //tune weights of program to meet biologic needs
+        //glialWeightTuning();                    //tune weights of program to meet biologic needs
 
         isFirstInit = false;                    //turn variable to false to indicate that connectome is now initialized
 

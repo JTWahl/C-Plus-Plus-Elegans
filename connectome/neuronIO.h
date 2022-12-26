@@ -32,7 +32,7 @@ bool getOutputsFromLastTick(int outputID) {
     return lastTickOutputs[outputID];
 }
 
-void glialWeightTuning() {
+/*void glialWeightTuning() {
     //did nosetouch activate?
     if (noseTouchActive) {
             //initiate escape behavior-- backing up, acceleration, lots of movement backward
@@ -423,7 +423,7 @@ void glialWeightTuning() {
             }
         }
     }
-}
+}*/
 
 bool getMotorCellState(int cellID) {
 	bool cmdInterneuronActivations[commandInterneuronSize] = {};
@@ -457,14 +457,12 @@ void doLightAvoidance() {
 	for (int i = 0; i < lightAvoidanceSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if light avoidance neuron is in cellular matrix then set output to true
-			if (c.cellularMatrix[j].cellID == lightAvoidance[i].cellID) {
                 int id = c.cellularMatrix[j].cellID;
             //if light avoidance neuron is in cellular matrix then set output to true
                 if (id == 44 || id == 45 || id == 48 || id == 74 || id == 75 || id == 76 || id == 50 || id == 51) {
                     c.cellularMatrix[j].cellOutput = true;
                     lightAvoidanceActive = true;
                 }
-			}
 		}
 	}
 }
@@ -473,13 +471,11 @@ void doGentleTouch() {
 	for (int i = 0; i < gentleTouchSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if gentletouch neuron is in cellular matrix then set output to true
-			if (c.cellularMatrix[j].cellID == gentleTouch[i].cellID) {
                 int id = c.cellularMatrix[j].cellID;
 				if (id == 24 || id == 25 || id == 168 || id == 169 || id == 72) {
                     c.cellularMatrix[j].cellOutput = true;
                     gentleTouchActive = true;
 				}
-			}
 		}
 	}
 }
@@ -488,13 +484,11 @@ void doHarshTouch() {
 	for (int i = 0; i < harshTouchSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if harshtouch neuron is in cellular matrix then set output to true
-			if (c.cellularMatrix[j].cellID == harshTouch[i].cellID) {
                 int id = c.cellularMatrix[j].cellID;
                 if (id == 24 || id == 25 || id == 175 || id == 176) {
                     c.cellularMatrix[j].cellOutput = true;
                     harshTouchActive = true;
                 }
-			}
 		}
 	}
 }
@@ -503,13 +497,11 @@ void doThermotaxis() {
 	for (int i = 0; i < thermotaxisSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if thermotaxis neuron is in cellular matrix then set output to true
-			if (c.cellularMatrix[j].cellID == thermotaxis[i].cellID) {
                 int id = c.cellularMatrix[j].cellID;
                 if (id == 9 || id == 10 || id == 77 || id == 78 || id == 15 || id == 16 || id == 166 || id == 167) {
                     c.cellularMatrix[j].cellOutput = true;
                     thermotaxisActive = true;
                 }
-			}
 		}
     }
 }
@@ -518,13 +510,11 @@ void doChemorepulsion() {
 	for (int i = 0; i < chemorepulsionSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if chemorepulsion neuron is in cellular matrix then set output to true
-			if (c.cellularMatrix[j].cellID == chemorepulsion[i].cellID) {
-                int id = c.cellularMatrix[j].cellID;
+               int id = c.cellularMatrix[j].cellID;
                 if (id == 162 || id == 163 || id == 164 || id == 165 || id == 44 || id == 45 || id == 7 || id == 8) {
                     c.cellularMatrix[j].cellOutput = true;
                     chemorepulsionActive = true;
                 }
-			}
 		}
 	}
 }
@@ -533,13 +523,11 @@ void doChemoattraction() {
 	for (int i = 0; i < chemoattractionSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if chemoattraction neuron is in cellular matrix then set output to true
-			if (c.cellularMatrix[j].cellID == chemoattraction[i].cellID) {
                 int id = c.cellularMatrix[j].cellID;
                 if (id == 40 || id == 41 || id == 73 || id == 74 || id == 77 || id == 78) {
                     c.cellularMatrix[j].cellOutput = true;
                     chemoattractionActive = true;
                 }
-			}
 		}
 	}
 }

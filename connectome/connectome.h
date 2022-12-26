@@ -3,7 +3,6 @@
 
 using namespace std;
 
-
 const static int neuronCount = 302;
 const int maxSynapse = 500;
 const int commandInterneuronSize = 10;
@@ -14,7 +13,7 @@ const int harshTouchSize = 4;
 const int thermotaxisSize = 8;
 const int chemorepulsionSize = 8;
 const int chemoattractionSize = 6;
-const int threshold = 1;
+const float threshold = .05;
 
 int initNum = 0;
 bool isFirstInit = true;        //init check variable
@@ -275,7 +274,8 @@ neuron stringToNeuron(int id) {
 }
 
 void LTPandD(int preID, int postID) {
-    float hebbianFactor = 1.5;
+    float posHebbianFactor = .001;
+    float negHebbianFactor = -1.0;
     float runningSum = 0.0;
 
     if (initNum == 0) {
@@ -296,12 +296,12 @@ void LTPandD(int preID, int postID) {
             for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
                 if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
                     if (priorTicksOutputs[preID][1]) {               //if the preID cells output is true
-                        c.cellularMatrix[i].weights[j] += hebbianFactor * runningSum;    //add the hebbian factor to the postID cells weight for the preID cell
+                        c.cellularMatrix[i].weights[j] += posHebbianFactor * runningSum;    //add the hebbian factor to the postID cells weight for the preID cell
                     } else {                                                //otherwise
-                        if (c.cellularMatrix[i].weights[j] < hebbianFactor * runningSum) {   //if the weight of the neuron is less than the hebbian adjustment
+                        if (c.cellularMatrix[i].weights[j] < posHebbianFactor * runningSum) {   //if the weight of the neuron is less than the hebbian adjustment
                             c.cellularMatrix[i].weights[j] = 0;                 //just set that weight to zero
                         } else {                                                //if its more than the adjustment
-                            c.cellularMatrix[i].weights[j] -= hebbianFactor * runningSum;    //subtract the factor form the postID cells weight for the preID cell
+                            c.cellularMatrix[i].weights[j] = negHebbianFactor;    //subtract the factor form the postID cells weight for the preID cell
                         }
                     }
                 }
