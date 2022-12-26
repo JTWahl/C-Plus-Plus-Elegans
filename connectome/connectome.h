@@ -5,7 +5,7 @@ using namespace std;
 
 const static int neuronCount = 302;
 const int maxSynapse = 500;
-const int commandInterneuronSize = 10;
+const int commandInterneuronSize = 8;
 const int noseTouchSize = 2;
 const int lightAvoidanceSize = 8;
 const int gentleTouchSize = 5;
@@ -134,52 +134,43 @@ float calculateRandomWeight() {
 void neuronToString(neuron n) {           //function to convert a neuron to a string in the data file
     ofstream matrixFile;
 
-    string cellIDStr = "";
-    string thresholdStr = "";
-    string inputsStr = "";
-    string inputLenStr = "";
-    string weightsStr = "";
-    string weightLenStr = "";
-    string cellOutputStr = "";
+    stringstream cellIDStr;
+    cellIDStr << n.cellID;
 
-    cellIDStr = n.cellID;
-    thresholdStr = n.threshold;
-    inputLenStr = n.inputsLen;
-    weightLenStr = n.weightsLen;
-    cellOutputStr = n.cellOutput;
+    stringstream thresholdStr;
+    thresholdStr << n.threshold;
 
-    for (int i = 0; i < n.inputsLen; i++) {     //iterate over number of inputs/weights
-        if (inputsStr == "") {              //if empty then just assign a value
-            int inputVal = n.inputs[i];
-            int weightVal = n.weights[i];
+    stringstream inputLenStr;
+    inputLenStr << n.inputsLen;
 
-            inputsStr = inputVal;     //assign value of an input as a string
-            weightsStr = weightVal;   //assign value of a weight as a string
-        } else {                                    //otherwise
-            int inputVal = n.inputs[i];
-            int weightVal = n.weights[i];
+    stringstream weightLenStr;
+    weightLenStr << n.weightsLen;
 
-            inputsStr = inputVal;
-            weightsStr = weightVal;
+    stringstream cellOutputStr;
+    cellOutputStr << n.cellOutput;
 
-            inputsStr.append("\n");
-            inputsStr.append(inputsStr);   //append the values if already has data in string
+    stringstream inputsStr[n.inputsLen] = {};
+    stringstream weightsStr[n.weightsLen] = {};
 
-            weightsStr.append("\n");
-            weightsStr.append(weightsStr);
-        }
+    for (int i = 0; i < n.inputsLen; i++) {
+        inputsStr[i] << n.inputs[i];
+        weightsStr[i] << n.weights[i];
     }
 
-    matrixFile.open("cellularMatrixData.txt");      //open the file
+    matrixFile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt");      //open the file
 
-    matrixFile << cellIDStr + '\n';     //write out the information for each neuron into the file
-    matrixFile << thresholdStr + '\n';
-    matrixFile << inputsStr + '\n';
-    matrixFile << inputLenStr + '\n';
-    matrixFile << weightsStr + '\n';
-    matrixFile << weightLenStr + '\n';
-    matrixFile << cellOutputStr + '\n';
-    matrixFile << ',' + '\n';
+    matrixFile << cellIDStr.rdbuf() << endl;
+    matrixFile << thresholdStr.rdbuf() << endl;
+    matrixFile << inputLenStr.rdbuf() << endl;
+    for (int i = 0; i < n.inputsLen; i++) {
+        matrixFile << inputsStr[i].rdbuf() << endl;
+    }
+    matrixFile << weightLenStr.rdbuf() << endl;
+    for (int i = 0; i < n.weightsLen; i++) {
+        matrixFile << weightsStr[i].rdbuf() << endl;
+    }
+    matrixFile << cellOutputStr.rdbuf() << endl;
+    matrixFile << ',' << endl;
 
     matrixFile.close();             //close the file
 }
@@ -191,19 +182,19 @@ neuron stringToNeuron(int id) {
     neuron x;
 
     x.cellID = 0;
-    x.cellOutput = 0;
+    x.threshold = 1;
     x.inputsLen = 0;
     x.weightsLen = 0;
-    x.threshold = 1;
     x.inputs[0] = {};
     x.weights[0] = {};
+    x.cellOutput = 0;
 
     int maxSynapse = 500;
 
     string cellIDStr;
     string thresholdStr;
-    string inputsStr[maxSynapse];
     string inputsLenStr;
+    string inputsStr[maxSynapse];
     string weightsLenStr;
     string weightsStr[maxSynapse];
     string cellOutputStr;

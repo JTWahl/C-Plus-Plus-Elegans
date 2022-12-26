@@ -1,16 +1,12 @@
 #include "connectome.h"
 
-neuron noseTouch[2] = {c.cellularMatrix[15], c.cellularMatrix[16]};
-neuron lightAvoidance[8] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[48], c.cellularMatrix[45], c.cellularMatrix[75], c.cellularMatrix[76], c.cellularMatrix[50], c.cellularMatrix[51]};
+neuron noseTouch[4] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[114], c.cellularMatrix[115]}; //AIML, AIMR --> ASHL, ASHR, FLPL, FLPR, OLQ???
+neuron lightAvoidance[8] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[48], c.cellularMatrix[49], c.cellularMatrix[75], c.cellularMatrix[76], c.cellularMatrix[50], c.cellularMatrix[51]};
 neuron gentleTouch[5] = {c.cellularMatrix[24], c.cellularMatrix[25], c.cellularMatrix[168], c.cellularMatrix[169], c.cellularMatrix[72]};
 neuron harshTouch[4] = {c.cellularMatrix[24], c.cellularMatrix[25], c.cellularMatrix[175], c.cellularMatrix[176]};
-neuron thermotaxis[8] = {c.cellularMatrix[9], c.cellularMatrix[10], c.cellularMatrix[77], c.cellularMatrix[78], c.cellularMatrix[15], c.cellularMatrix[16], c.cellularMatrix[166], c.cellularMatrix[167]};
-neuron chemorepulsion[8] = {c.cellularMatrix[162], c.cellularMatrix[163], c.cellularMatrix[164], c.cellularMatrix[165], c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[7], c.cellularMatrix[8]};
-neuron chemoattraction[6] = {c.cellularMatrix[40], c.cellularMatrix[41], c.cellularMatrix[73], c.cellularMatrix[74], c.cellularMatrix[77], c.cellularMatrix[78]};
-
-neuron commandInterneurons[commandInterneuronSize] = {
-    c.cellularMatrix[56], c.cellularMatrix[57], c.cellularMatrix[173], c.cellularMatrix[174], c.cellularMatrix[54], c.cellularMatrix[55], c.cellularMatrix[58], c.cellularMatrix[59], c.cellularMatrix[60], c.cellularMatrix[61]
-};
+neuron thermotaxis[5] = {c.cellularMatrix[9], c.cellularMatrix[10], c.cellularMatrix[16], c.cellularMatrix[166], c.cellularMatrix[167]}; //AFDL, AFDR, AWC (SEEK OUT), AIML, AIMR, PHC (AVOID) --> AFDL, AFDR, PHCL, PHCR
+neuron chemorepulsion[4] = {c.cellularMatrix[162], c.cellularMatrix[163], c.cellularMatrix[164], c.cellularMatrix[165]}; //PHAL, PHAR, PHBL, PHBR, ASHL, ASHR, ADLL, ADLR --> -ASH, -ADL
+neuron chemoattraciton[2] = {c.cellularMatrix[40], c.cellularMatrix[41]}; //ASEL, ASER, AWAL?, AWAR?, AWCL?, AWCR? --> ASEL, ASER
 
 #define AVBL 56   //- forward
 #define AVBR 57   //- forward
@@ -20,9 +16,10 @@ neuron commandInterneurons[commandInterneuronSize] = {
 #define AVAR 55   //- backward
 #define AVDL 58   //- backward from head touch
 #define AVDR 59   //- backward from head touch
-#define AVEL 60   //- backward
-#define AVER 61   //- backward
 
+neuron commandInterneurons[commandInterneuronSize] = {
+    c.cellularMatrix[56], c.cellularMatrix[57], c.cellularMatrix[173], c.cellularMatrix[174], c.cellularMatrix[54], c.cellularMatrix[55], c.cellularMatrix[58], c.cellularMatrix[59]
+};
 
 bool getInputsFromLastTick(int inputID) {
     return lastTickInputs[inputID];
@@ -444,7 +441,7 @@ void doNoseTouch() {
 		for (int j = 0; j < neuronCount; j++) {
             int id = c.cellularMatrix[j].cellID;
             //if nosetouch neuron is in cellular matrix then set output to true
-            if (id == 15 || id == 16) {
+            if (id == 44 || id == 45 || id == 114 || id == 115) {
                 c.cellularMatrix[j].cellOutput = true;
                 noseTouchActive = true;
                 //cout << "Nose Touch Active?: " << noseTouchActive << endl;
@@ -459,7 +456,7 @@ void doLightAvoidance() {
 			//if light avoidance neuron is in cellular matrix then set output to true
                 int id = c.cellularMatrix[j].cellID;
             //if light avoidance neuron is in cellular matrix then set output to true
-                if (id == 44 || id == 45 || id == 48 || id == 74 || id == 75 || id == 76 || id == 50 || id == 51) {
+                if (id == 44 || id == 45 || id == 48 || id == 49 || id == 75 || id == 76 || id == 50 || id == 51) {
                     c.cellularMatrix[j].cellOutput = true;
                     lightAvoidanceActive = true;
                 }
@@ -498,7 +495,7 @@ void doThermotaxis() {
 		for (int j = 0; j < neuronCount; j++) {
 			//if thermotaxis neuron is in cellular matrix then set output to true
                 int id = c.cellularMatrix[j].cellID;
-                if (id == 9 || id == 10 || id == 77 || id == 78 || id == 15 || id == 16 || id == 166 || id == 167) {
+                if (id == 9 || id == 10 || id == 16 || id == 166 || id == 167) {
                     c.cellularMatrix[j].cellOutput = true;
                     thermotaxisActive = true;
                 }
@@ -511,7 +508,7 @@ void doChemorepulsion() {
 		for (int j = 0; j < neuronCount; j++) {
 			//if chemorepulsion neuron is in cellular matrix then set output to true
                int id = c.cellularMatrix[j].cellID;
-                if (id == 162 || id == 163 || id == 164 || id == 165 || id == 44 || id == 45 || id == 7 || id == 8) {
+                if (id == 162 || id == 163 || id == 164 || id == 165) {
                     c.cellularMatrix[j].cellOutput = true;
                     chemorepulsionActive = true;
                 }
@@ -524,7 +521,7 @@ void doChemoattraction() {
 		for (int j = 0; j < neuronCount; j++) {
 			//if chemoattraction neuron is in cellular matrix then set output to true
                 int id = c.cellularMatrix[j].cellID;
-                if (id == 40 || id == 41 || id == 73 || id == 74 || id == 77 || id == 78) {
+                if (id == 40 || id == 41) {
                     c.cellularMatrix[j].cellOutput = true;
                     chemoattractionActive = true;
                 }
