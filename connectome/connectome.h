@@ -14,6 +14,31 @@ const int harshTouchSize = 4;
 const int thermotaxisSize = 8;
 const int chemorepulsionSize = 8;
 const int chemoattractionSize = 6;
+const int threshold = 1;
+
+int initNum = 0;
+bool isFirstInit = true;        //init check variable
+bool priorTicksOutputs[302][3] = {}; //holds last 5 outputs for every neuron in the network
+bool lastTickInputs[7] = {};    //last inputs array
+bool lastTickOutputs[10] = {};  //last outputs array
+bool noseTouchActive = false;    //input check variables
+bool lightAvoidanceActive = false;
+bool gentleTouchActive = false;
+bool harshTouchActive = false;
+bool thermotaxisActive = false;
+bool chemorepulsionActive = false;
+bool chemoattractionActive = false;
+bool avblActive = false;        //output check variables
+bool avbrActive = false;
+bool pvclActive = false;
+bool pvcrActive = false;
+bool avalActive = false;
+bool avarActive = false;
+bool avdlActive = false;
+bool avdrActive = false;
+bool avelActive = false;
+bool averActive = false;
+
 
 struct neuron {
    int cellID;										//the assigned ID for the cell
@@ -79,6 +104,8 @@ int getCellWeightLenFromMatrix(int targetID) {
 Getter function for the weight array of a given cell. Takes a cells ID, outputs an array of the weight values.
 */
 float getWeightFromMatrix(int neuronID, int weightID) {
+//    cout << "Neuron ID: " << neuronID << endl;
+//    cout << "Weight ID: " << weightID << endl;
    return c.cellularMatrix[neuronID].weights[weightID];
 }
 
@@ -162,6 +189,16 @@ neuron stringToNeuron(int id) {
     ifstream matrixFile;
 
     neuron n;
+    neuron x;
+
+    x.cellID = 0;
+    x.cellOutput = 0;
+    x.inputsLen = 0;
+    x.weightsLen = 0;
+    x.threshold = 1;
+    x.inputs[0] = {};
+    x.weights[0] = {};
+
     int maxSynapse = 500;
 
     string cellIDStr;
@@ -173,374 +210,407 @@ neuron stringToNeuron(int id) {
     string cellOutputStr;
     string data = "";
 
-    matrixFile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/inputTest.txt");
+    matrixFile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt");
 
     for (int j = 1; j <= id; j++) {
-        if (data.compare(",")) break;   //stop reading file if reaches end
+        if (getline(matrixFile, data, '\n')) cellIDStr = data;
+        stringstream idcell (cellIDStr);
+        idcell >> n.cellID;
+        //cout << "Cell ID: " << cellIDStr << endl;
 
-        while (getline(matrixFile, data)) {
-            cellIDStr = data;
-            stringstream idcell (cellIDStr);
-            idcell >> n.cellID;
-        }
+        if (getline(matrixFile, data, '\n')) thresholdStr = data;
+        stringstream threshold (thresholdStr);
+        threshold >> n.threshold;
+        //cout << "Threshold: " << thresholdStr << endl;
 
-        while (getline(matrixFile, data)) {
-            thresholdStr = data;
-            stringstream threshold (thresholdStr);
-            threshold >> n.threshold;
-        }
-
-        while (getline(matrixFile, data)) {
-            inputsLenStr = data;
-            stringstream inputLen (inputsLenStr);
-            inputLen >> n.inputsLen;
-        }
-
-        while (getline(matrixFile, data)) {
-            weightsLenStr = data;
-            stringstream weightLen (weightsLenStr);
-            weightLen >> n.weightsLen;
-        }
+        if (getline(matrixFile, data, '\n')) inputsLenStr = data;
+        stringstream inputLen (inputsLenStr);
+        inputLen >> n.inputsLen;
+        //cout << "Input Len: " << inputsLenStr << endl;
 
         for (int i = 0; i < n.inputsLen; i++) {
-            while (getline(matrixFile, data)) {
-                inputsStr[i] = data;
-                stringstream inputs (inputsStr[i]);
-                inputs >> n.inputs[i];
-            }
+            if (getline(matrixFile, data, '\n')) inputsStr[i] = data;
+            stringstream inputs (inputsStr[i]);
+            inputs >> n.inputs[i];
+            //cout << "Input IDs: " << inputsStr[i] << endl;
         }
+
+        if (getline(matrixFile, data, '\n')) weightsLenStr = data;
+        stringstream weightLen (weightsLenStr);
+        weightLen >> n.weightsLen;
+        //cout << "Weight Len: " << weightsLenStr << endl;
+
 
         for (int i = 0; i < n.weightsLen; i++) {
-            while (getline(matrixFile, data)) {
-                weightsStr[i] = data;
-                stringstream weights (weightsStr[i]);
-                weights >> n.weights[i];
-
-                n.weights[i] = calculateRandomWeight();
-            }
+            if (getline(matrixFile, data, '\n')) weightsStr[i] = data;
+            stringstream weights (weightsStr[i]);
+            weights >> n.weights[i];
+            //n.weights[i] = calculateRandomWeight();
+            //cout << "Weights: " << weightsStr[i] << endl;
         }
 
-        while (getline(matrixFile, data)) {
-            cellOutputStr = data;
-            stringstream cellOutput (cellOutputStr);
-            cellOutput >> n.cellOutput;
+        if (getline(matrixFile, data, '\n')) cellOutputStr = data;
+        stringstream cellOutput (cellOutputStr);
+        cellOutput >> n.cellOutput;
+        //cout << "Output: " << cellOutputStr << endl;
+
+        if (getline(matrixFile, data, '\n')) string delim = data;
+
+        if (j == id) {
+            return n;
         }
     }
 
-   /* while (getline(matrixFile, data)) {
-        outputData = data;
-    }*/
-
     matrixFile.close();
 
-    return n;
+/*    cout << "ID: " << n.cellID << endl;
+    cout << "THRESHOLD: " << n.threshold << endl;
+    cout << "INPUT LEN: " << n.inputsLen << endl;
+    cout << "WEIGHT LEN: " << n.weightsLen << endl;
+    cout << "INPUTS: " << n.inputs << endl;
+    cout << "WEIGHTS: " << n.weights << endl;
+    cout << "OUTPUT: " << n.cellOutput << endl;
+*/
+    return x;
 }
 
-neuron neuronAccess (int id) {
-    return stringToNeuron(id);
+void LTPandD(int preID, int postID) {
+    float hebbianFactor = 1.5;
+    float runningSum = 0.0;
+
+    if (initNum == 0) {
+        if (priorTicksOutputs[preID][0]) runningSum++;
+    } else if (initNum == 2) {
+        if (priorTicksOutputs[preID][0]) runningSum++;
+        if (priorTicksOutputs[preID][1]) runningSum++;
+        runningSum /= 1;
+    } else {
+        if (priorTicksOutputs[preID][0]) runningSum++;
+        if (priorTicksOutputs[preID][1]) runningSum++;
+        if (priorTicksOutputs[preID][2]) runningSum++;
+        runningSum /= 2;
+    }
+
+    for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
+        if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
+            for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
+                if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
+                    if (priorTicksOutputs[preID][1]) {               //if the preID cells output is true
+                        c.cellularMatrix[i].weights[j] += hebbianFactor * runningSum;    //add the hebbian factor to the postID cells weight for the preID cell
+                    } else {                                                //otherwise
+                        if (c.cellularMatrix[i].weights[j] < hebbianFactor * runningSum) {   //if the weight of the neuron is less than the hebbian adjustment
+                            c.cellularMatrix[i].weights[j] = 0;                 //just set that weight to zero
+                        } else {                                                //if its more than the adjustment
+                            c.cellularMatrix[i].weights[j] -= hebbianFactor * runningSum;    //subtract the factor form the postID cells weight for the preID cell
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 neuron neuralList[] = {
-    neuronAccess(1),
-    neuronAccess(2),
-    neuronAccess(3),
-    neuronAccess(4),
-    neuronAccess(5),
-    neuronAccess(6),
-    neuronAccess(7),
-    neuronAccess(8),
-    neuronAccess(9),
-    neuronAccess(10),
-    neuronAccess(11),
-    neuronAccess(12),
-    neuronAccess(13),
-    neuronAccess(14),
-    neuronAccess(15),
-    neuronAccess(16),
-    neuronAccess(17),
-    neuronAccess(18),
-    neuronAccess(19),
-    neuronAccess(20),
-    neuronAccess(21),
-    neuronAccess(22),
-    neuronAccess(23),
-    neuronAccess(24),
-    neuronAccess(25),
-    neuronAccess(26),
-    neuronAccess(27),
-    neuronAccess(28),
-    neuronAccess(29),
-    neuronAccess(30),
-    neuronAccess(31),
-    neuronAccess(32),
-    neuronAccess(33),
-    neuronAccess(34),
-    neuronAccess(35),
-    neuronAccess(36),
-    neuronAccess(37),
-    neuronAccess(38),
-    neuronAccess(39),
-    neuronAccess(40),
-    neuronAccess(41),
-    neuronAccess(42),
-    neuronAccess(43),
-    neuronAccess(44),
-    neuronAccess(45),
-    neuronAccess(46),
-    neuronAccess(47),
-    neuronAccess(48),
-    neuronAccess(49),
-    neuronAccess(50),
-    neuronAccess(51),
-    neuronAccess(52),
-    neuronAccess(53),
-    neuronAccess(54),
-    neuronAccess(55),
-    neuronAccess(56),
-    neuronAccess(57),
-    neuronAccess(58),
-    neuronAccess(59),
-    neuronAccess(60),
-    neuronAccess(61),
-    neuronAccess(62),
-    neuronAccess(63),
-    neuronAccess(64),
-    neuronAccess(65),
-    neuronAccess(66),
-    neuronAccess(67),
-    neuronAccess(68),
-    neuronAccess(69),
-    neuronAccess(70),
-    neuronAccess(71),
-    neuronAccess(72),
-    neuronAccess(73),
-    neuronAccess(74),
-    neuronAccess(75),
-    neuronAccess(76),
-    neuronAccess(77),
-    neuronAccess(78),
-    neuronAccess(79),
-    neuronAccess(80),
-    neuronAccess(81),
-    neuronAccess(82),
-    neuronAccess(83),
-    neuronAccess(84),
-    neuronAccess(85),
-    neuronAccess(86),
-    neuronAccess(87),
-    neuronAccess(88),
-    neuronAccess(89),
-    neuronAccess(90),
-    neuronAccess(91),
-    neuronAccess(92),
-    neuronAccess(93),
-    neuronAccess(94),
-    neuronAccess(95),
-    neuronAccess(96),
-    neuronAccess(97),
-    neuronAccess(98),
-    neuronAccess(99),
-    neuronAccess(100),
-    neuronAccess(101),
-    neuronAccess(102),
-    neuronAccess(103),
-    neuronAccess(104),
-    neuronAccess(105),
-    neuronAccess(106),
-    neuronAccess(107),
-    neuronAccess(108),
-    neuronAccess(109),
-    neuronAccess(110),
-    neuronAccess(111),
-    neuronAccess(112),
-    neuronAccess(113),
-    neuronAccess(114),
-    neuronAccess(115),
-    neuronAccess(116),
-    neuronAccess(117),
-    neuronAccess(118),
-    neuronAccess(119),
-    neuronAccess(120),
-    neuronAccess(121),
-    neuronAccess(122),
-    neuronAccess(123),
-    neuronAccess(124),
-    neuronAccess(125),
-    neuronAccess(126),
-    neuronAccess(127),
-    neuronAccess(128),
-    neuronAccess(129),
-    neuronAccess(130),
-    neuronAccess(131),
-    neuronAccess(132),
-    neuronAccess(133),
-    neuronAccess(134),
-    neuronAccess(135),
-    neuronAccess(136),
-    neuronAccess(137),
-    neuronAccess(138),
-    neuronAccess(139),
-    neuronAccess(140),
-    neuronAccess(141),
-    neuronAccess(142),
-    neuronAccess(143),
-    neuronAccess(144),
-    neuronAccess(145),
-    neuronAccess(146),
-    neuronAccess(147),
-    neuronAccess(148),
-    neuronAccess(149),
-    neuronAccess(150),
-    neuronAccess(151),
-    neuronAccess(152),
-    neuronAccess(153),
-    neuronAccess(154),
-    neuronAccess(155),
-    neuronAccess(156),
-    neuronAccess(157),
-    neuronAccess(158),
-    neuronAccess(159),
-    neuronAccess(160),
-    neuronAccess(161),
-    neuronAccess(162),
-    neuronAccess(163),
-    neuronAccess(164),
-    neuronAccess(165),
-    neuronAccess(166),
-    neuronAccess(167),
-    neuronAccess(168),
-    neuronAccess(169),
-    neuronAccess(170),
-    neuronAccess(171),
-    neuronAccess(172),
-    neuronAccess(173),
-    neuronAccess(174),
-    neuronAccess(175),
-    neuronAccess(176),
-    neuronAccess(177),
-    neuronAccess(178),
-    neuronAccess(179),
-    neuronAccess(180),
-    neuronAccess(181),
-    neuronAccess(182),
-    neuronAccess(183),
-    neuronAccess(184),
-    neuronAccess(185),
-    neuronAccess(186),
-    neuronAccess(187),
-    neuronAccess(188),
-    neuronAccess(189),
-    neuronAccess(190),
-    neuronAccess(191),
-    neuronAccess(192),
-    neuronAccess(193),
-    neuronAccess(194),
-    neuronAccess(195),
-    neuronAccess(196),
-    neuronAccess(197),
-    neuronAccess(198),
-    neuronAccess(199),
-    neuronAccess(200),
-    neuronAccess(201),
-    neuronAccess(202),
-    neuronAccess(203),
-    neuronAccess(204),
-    neuronAccess(205),
-    neuronAccess(206),
-    neuronAccess(207),
-    neuronAccess(208),
-    neuronAccess(209),
-    neuronAccess(210),
-    neuronAccess(211),
-    neuronAccess(212),
-    neuronAccess(213),
-    neuronAccess(214),
-    neuronAccess(215),
-    neuronAccess(216),
-    neuronAccess(217),
-    neuronAccess(218),
-    neuronAccess(219),
-    neuronAccess(220),
-    neuronAccess(221),
-    neuronAccess(222),
-    neuronAccess(223),
-    neuronAccess(224),
-    neuronAccess(225),
-    neuronAccess(226),
-    neuronAccess(227),
-    neuronAccess(228),
-    neuronAccess(229),
-    neuronAccess(230),
-    neuronAccess(231),
-    neuronAccess(232),
-    neuronAccess(233),
-    neuronAccess(234),
-    neuronAccess(235),
-    neuronAccess(236),
-    neuronAccess(237),
-    neuronAccess(238),
-    neuronAccess(239),
-    neuronAccess(240),
-    neuronAccess(241),
-    neuronAccess(242),
-    neuronAccess(243),
-    neuronAccess(244),
-    neuronAccess(245),
-    neuronAccess(246),
-    neuronAccess(247),
-    neuronAccess(248),
-    neuronAccess(249),
-    neuronAccess(250),
-    neuronAccess(251),
-    neuronAccess(252),
-    neuronAccess(253),
-    neuronAccess(254),
-    neuronAccess(255),
-    neuronAccess(256),
-    neuronAccess(257),
-    neuronAccess(258),
-    neuronAccess(259),
-    neuronAccess(260),
-    neuronAccess(261),
-    neuronAccess(262),
-    neuronAccess(263),
-    neuronAccess(264),
-    neuronAccess(265),
-    neuronAccess(266),
-    neuronAccess(267),
-    neuronAccess(268),
-    neuronAccess(269),
-    neuronAccess(270),
-    neuronAccess(271),
-    neuronAccess(272),
-    neuronAccess(273),
-    neuronAccess(274),
-    neuronAccess(275),
-    neuronAccess(276),
-    neuronAccess(277),
-    neuronAccess(278),
-    neuronAccess(279),
-    neuronAccess(280),
-    neuronAccess(281),
-    neuronAccess(282),
-    neuronAccess(283),
-    neuronAccess(284),
-    neuronAccess(285),
-    neuronAccess(286),
-    neuronAccess(287),
-    neuronAccess(288),
-    neuronAccess(289),
-    neuronAccess(290),
-    neuronAccess(291),
-    neuronAccess(292),
-    neuronAccess(293),
-    neuronAccess(294),
-    neuronAccess(295),
-    neuronAccess(296),
-    neuronAccess(297),
-    neuronAccess(298),
-    neuronAccess(299),
-    neuronAccess(300),
-    neuronAccess(301),
-    neuronAccess(302)
+    stringToNeuron(1),
+    stringToNeuron(2),
+    stringToNeuron(3),
+    stringToNeuron(4),
+    stringToNeuron(5),
+    stringToNeuron(6),
+    stringToNeuron(7),
+    stringToNeuron(8),
+    stringToNeuron(9),
+    stringToNeuron(10),
+    stringToNeuron(11),
+    stringToNeuron(12),
+    stringToNeuron(13),
+    stringToNeuron(14),
+    stringToNeuron(15),
+    stringToNeuron(16),
+    stringToNeuron(17),
+    stringToNeuron(18),
+    stringToNeuron(19),
+    stringToNeuron(20),
+    stringToNeuron(21),
+    stringToNeuron(22),
+    stringToNeuron(23),
+    stringToNeuron(24),
+    stringToNeuron(25),
+    stringToNeuron(26),
+    stringToNeuron(27),
+    stringToNeuron(28),
+    stringToNeuron(29),
+    stringToNeuron(30),
+    stringToNeuron(31),
+    stringToNeuron(32),
+    stringToNeuron(33),
+    stringToNeuron(34),
+    stringToNeuron(35),
+    stringToNeuron(36),
+    stringToNeuron(37),
+    stringToNeuron(38),
+    stringToNeuron(39),
+    stringToNeuron(40),
+    stringToNeuron(41),
+    stringToNeuron(42),
+    stringToNeuron(43),
+    stringToNeuron(44),
+    stringToNeuron(45),
+    stringToNeuron(46),
+    stringToNeuron(47),
+    stringToNeuron(48),
+    stringToNeuron(49),
+    stringToNeuron(50),
+    stringToNeuron(51),
+    stringToNeuron(52),
+    stringToNeuron(53),
+    stringToNeuron(54),
+    stringToNeuron(55),
+    stringToNeuron(56),
+    stringToNeuron(57),
+    stringToNeuron(58),
+    stringToNeuron(59),
+    stringToNeuron(60),
+    stringToNeuron(61),
+    stringToNeuron(62),
+    stringToNeuron(63),
+    stringToNeuron(64),
+    stringToNeuron(65),
+    stringToNeuron(66),
+    stringToNeuron(67),
+    stringToNeuron(68),
+    stringToNeuron(69),
+    stringToNeuron(70),
+    stringToNeuron(71),
+    stringToNeuron(72),
+    stringToNeuron(73),
+    stringToNeuron(74),
+    stringToNeuron(75),
+    stringToNeuron(76),
+    stringToNeuron(77),
+    stringToNeuron(78),
+    stringToNeuron(79),
+    stringToNeuron(80),
+    stringToNeuron(81),
+    stringToNeuron(82),
+    stringToNeuron(83),
+    stringToNeuron(84),
+    stringToNeuron(85),
+    stringToNeuron(86),
+    stringToNeuron(87),
+    stringToNeuron(88),
+    stringToNeuron(89),
+    stringToNeuron(90),
+    stringToNeuron(91),
+    stringToNeuron(92),
+    stringToNeuron(93),
+    stringToNeuron(94),
+    stringToNeuron(95),
+    stringToNeuron(96),
+    stringToNeuron(97),
+    stringToNeuron(98),
+    stringToNeuron(99),
+    stringToNeuron(100),
+    stringToNeuron(101),
+    stringToNeuron(102),
+    stringToNeuron(103),
+    stringToNeuron(104),
+    stringToNeuron(105),
+    stringToNeuron(106),
+    stringToNeuron(107),
+    stringToNeuron(108),
+    stringToNeuron(109),
+    stringToNeuron(110),
+    stringToNeuron(111),
+    stringToNeuron(112),
+    stringToNeuron(113),
+    stringToNeuron(114),
+    stringToNeuron(115),
+    stringToNeuron(116),
+    stringToNeuron(117),
+    stringToNeuron(118),
+    stringToNeuron(119),
+    stringToNeuron(120),
+    stringToNeuron(121),
+    stringToNeuron(122),
+    stringToNeuron(123),
+    stringToNeuron(124),
+    stringToNeuron(125),
+    stringToNeuron(126),
+    stringToNeuron(127),
+    stringToNeuron(128),
+    stringToNeuron(129),
+    stringToNeuron(130),
+    stringToNeuron(131),
+    stringToNeuron(132),
+    stringToNeuron(133),
+    stringToNeuron(134),
+    stringToNeuron(135),
+    stringToNeuron(136),
+    stringToNeuron(137),
+    stringToNeuron(138),
+    stringToNeuron(139),
+    stringToNeuron(140),
+    stringToNeuron(141),
+    stringToNeuron(142),
+    stringToNeuron(143),
+    stringToNeuron(144),
+    stringToNeuron(145),
+    stringToNeuron(146),
+    stringToNeuron(147),
+    stringToNeuron(148),
+    stringToNeuron(149),
+    stringToNeuron(150),
+    stringToNeuron(151),
+    stringToNeuron(152),
+    stringToNeuron(153),
+    stringToNeuron(154),
+    stringToNeuron(155),
+    stringToNeuron(156),
+    stringToNeuron(157),
+    stringToNeuron(158),
+    stringToNeuron(159),
+    stringToNeuron(160),
+    stringToNeuron(161),
+    stringToNeuron(162),
+    stringToNeuron(163),
+    stringToNeuron(164),
+    stringToNeuron(165),
+    stringToNeuron(166),
+    stringToNeuron(167),
+    stringToNeuron(168),
+    stringToNeuron(169),
+    stringToNeuron(170),
+    stringToNeuron(171),
+    stringToNeuron(172),
+    stringToNeuron(173),
+    stringToNeuron(174),
+    stringToNeuron(175),
+    stringToNeuron(176),
+    stringToNeuron(177),
+    stringToNeuron(178),
+    stringToNeuron(179),
+    stringToNeuron(180),
+    stringToNeuron(181),
+    stringToNeuron(182),
+    stringToNeuron(183),
+    stringToNeuron(184),
+    stringToNeuron(185),
+    stringToNeuron(186),
+    stringToNeuron(187),
+    stringToNeuron(188),
+    stringToNeuron(189),
+    stringToNeuron(190),
+    stringToNeuron(191),
+    stringToNeuron(192),
+    stringToNeuron(193),
+    stringToNeuron(194),
+    stringToNeuron(195),
+    stringToNeuron(196),
+    stringToNeuron(197),
+    stringToNeuron(198),
+    stringToNeuron(199),
+    stringToNeuron(200),
+    stringToNeuron(201),
+    stringToNeuron(202),
+    stringToNeuron(203),
+    stringToNeuron(204),
+    stringToNeuron(205),
+    stringToNeuron(206),
+    stringToNeuron(207),
+    stringToNeuron(208),
+    stringToNeuron(209),
+    stringToNeuron(210),
+    stringToNeuron(211),
+    stringToNeuron(212),
+    stringToNeuron(213),
+    stringToNeuron(214),
+    stringToNeuron(215),
+    stringToNeuron(216),
+    stringToNeuron(217),
+    stringToNeuron(218),
+    stringToNeuron(219),
+    stringToNeuron(220),
+    stringToNeuron(221),
+    stringToNeuron(222),
+    stringToNeuron(223),
+    stringToNeuron(224),
+    stringToNeuron(225),
+    stringToNeuron(226),
+    stringToNeuron(227),
+    stringToNeuron(228),
+    stringToNeuron(229),
+    stringToNeuron(230),
+    stringToNeuron(231),
+    stringToNeuron(232),
+    stringToNeuron(233),
+    stringToNeuron(234),
+    stringToNeuron(235),
+    stringToNeuron(236),
+    stringToNeuron(237),
+    stringToNeuron(238),
+    stringToNeuron(239),
+    stringToNeuron(240),
+    stringToNeuron(241),
+    stringToNeuron(242),
+    stringToNeuron(243),
+    stringToNeuron(244),
+    stringToNeuron(245),
+    stringToNeuron(246),
+    stringToNeuron(247),
+    stringToNeuron(248),
+    stringToNeuron(249),
+    stringToNeuron(250),
+    stringToNeuron(251),
+    stringToNeuron(252),
+    stringToNeuron(253),
+    stringToNeuron(254),
+    stringToNeuron(255),
+    stringToNeuron(256),
+    stringToNeuron(257),
+    stringToNeuron(258),
+    stringToNeuron(259),
+    stringToNeuron(260),
+    stringToNeuron(261),
+    stringToNeuron(262),
+    stringToNeuron(263),
+    stringToNeuron(264),
+    stringToNeuron(265),
+    stringToNeuron(266),
+    stringToNeuron(267),
+    stringToNeuron(268),
+    stringToNeuron(269),
+    stringToNeuron(270),
+    stringToNeuron(271),
+    stringToNeuron(272),
+    stringToNeuron(273),
+    stringToNeuron(274),
+    stringToNeuron(275),
+    stringToNeuron(276),
+    stringToNeuron(277),
+    stringToNeuron(278),
+    stringToNeuron(279),
+    stringToNeuron(280),
+    stringToNeuron(281),
+    stringToNeuron(282),
+    stringToNeuron(283),
+    stringToNeuron(284),
+    stringToNeuron(285),
+    stringToNeuron(286),
+    stringToNeuron(287),
+    stringToNeuron(288),
+    stringToNeuron(289),
+    stringToNeuron(290),
+    stringToNeuron(291),
+    stringToNeuron(292),
+    stringToNeuron(293),
+    stringToNeuron(294),
+    stringToNeuron(295),
+    stringToNeuron(296),
+    stringToNeuron(297),
+    stringToNeuron(298),
+    stringToNeuron(299),
+    stringToNeuron(300),
+    stringToNeuron(301),
+    stringToNeuron(302)
 };

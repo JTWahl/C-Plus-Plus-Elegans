@@ -1,13 +1,11 @@
-//TODO: something wrong with calculation of neuron output calculation... they always progress to true
-//TODO: verify connectome is crunching numbers properly, saveNewState is actually saving updated values, etc
-//TODO: generate dataset of genetic cell weights for tuning
-//TODO: write "glial code" that tunes weights closer to their "genetic values" based on whether initiated inputs created the expected output values
+//TODO: why are all neurons off except nose touch, even with inputs??
+//TODO: why do inputs never seem to result in output values changing?
+//TODO: verify saveNewState() is actually saving updated info
+//TODO: make code modular for any network!
+//TODO: update visual outputs to be more informative... graphics?
 
 /* Note 1
 ORDER OF STRETCH GOALS:
-
--weights initialized randomly between 0 and .1
--weights can be moved down to minimum of -.1
 -weights are tuned constantly; if "genes" determine they need to be stronger or weaker, it adjusts via glia
 -LTP and LTD are represented in cell synapses over short periods
 
@@ -92,9 +90,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[0] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[0] = false;
             }
         }
                 //AVBR
@@ -105,9 +105,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[1] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[1] = false;
             }
         }
                 //PVCL
@@ -117,9 +119,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[2] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[2] = false;
             }
         }
                 //PVCR
@@ -129,9 +133,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[3] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[3] = false;
             }
         }
                 //AVAL
@@ -141,9 +147,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[4] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[4] = false;
             }
         }
                 //AVAR
@@ -153,9 +161,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[5] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[5] = false;
             }
         }
                 //AVDL
@@ -165,9 +175,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[6] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[6] = false;
             }
         }
                 //AVDR
@@ -177,9 +189,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[7] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[7] = false;
             }
         }
                 //AVEL
@@ -189,9 +203,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[8] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[8] = false;
             }
         }
                 //AVER
@@ -201,9 +217,11 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
+                lastTickOutputs[9] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
+                lastTickOutputs[9] = false;
             }
         }
     }
@@ -224,44 +242,65 @@ void printMotorMatrix() {
     cout << '\n';
 }
 
-/* PROBLEMS SEEM TO COME FROM THIS FUNCTION!
+/*
 Function to calculate if a given cell fires. Takes a cells ID, outputs a boolean activation value.
 */
 bool activationFunction (int cellID) {          	                    //activation function calculator-- it tells you what output the weighted inputs into the given neuron make
+    int inputLen = c.cellularMatrix[cellID].inputsLen;                   //get the length of the input and weight matrix for a given neuron
     float finalSummation = 0.0;                                         //initalize function to hold final sum(Xi * Wi)
-    float neuronWeights[maxSynapse] = {};                               //make matrix for all cells weights
-    int neuronInputs[maxSynapse] = {};                                  //make matrix for all cells inputs
-    int threshold = getCellThresholdFromMatrix(cellID);                 //make a matrix to hold all cell input IDs for a given neurons presynapses
+    float neuronWeights[inputLen] = {};                               //make matrix for all cells weights
+    int neuronInputs[inputLen] = {};                                  //make matrix for all cells inputs
 
-    for (int i = 0; i < maxSynapse; i++) {
+    for (int i = 0; i < inputLen; i++) {
         neuronWeights[i] = getWeightFromMatrix(cellID, i);              //update matrix to hold all cell weights for a given neuron
         neuronInputs[i] = getInputFromMatrix(cellID, i);                //update matrix to hold all cell input IDs for a given neurons presynapses
+        //cout << "weights: " << neuronWeights[i] << endl;
+        //cout << "inputs: " << neuronInputs[i] << endl;
     }
 
-    int inputLen = getCellInputLenFromMatrix(cellID);                   //get the length of the input and weight matrix for a given neuron
-    float productMatrix[neuronCount];                                   //make a maktrix to hold all multiplied sums
+    float productMatrix[inputLen];                                   //make a maktrix to hold all multiplied sums
 
     bool inputValues[inputLen] = {};                                    //make an array to hold all boolean values for each presynaptic neuron input
 
     for (int i = 0; i < inputLen; i++) {                                //iterate over the length of presynaptic inputs
-        inputValues[i] = getCellOutputFromMatrix(neuronInputs[i]);      //fill the presynaptic boolean matrix with every output value for each presynaptic neuron
+        inputValues[i] = c.cellularMatrix[neuronInputs[i]].cellOutput;  //fill the presynaptic boolean matrix with every output value for each presynaptic neuron
+        //cout << "input values: " << inputValues[i] << endl;
     }
 
-    for (int i = 0; i < maxSynapse; i++) {                              //iterate over all possible connections
+    for (int i = 0; i < inputLen; i++) {                              //iterate over all possible connections
         productMatrix[i] = neuronWeights[i] * inputValues[i];           //fill a matrix with the product of the Wi and Xi values
+        if (!isFirstInit) LTPandD(i, cellID);                           //for each connection do hebbian logic to create new weights for next tick
+//        cout << "productMatrix: " << productMatrix[i] << endl;
     }
 
     for (int i = 0; i < inputLen; i++) {		                        //iterate over the length of presynaptic inputs
         finalSummation += productMatrix[i];		                        //for every input add the product matrix to a running sum
+        //cout << productMatrix[i];
     }
 
-    //cout << "Final Sum: " << finalSummation << endl;
-    //cout << "Threshold: " << threshold << endl;
+//    cout << "Final Sum: " << finalSummation << endl;
+//    cout << "Threshold: " << threshold << endl;
 
     if (finalSummation < threshold) {       //if the running sum is less than the given neurons threshold
-        return false;                                                   //return false
+        if (initNum >= 3) {
+            priorTicksOutputs[cellID][2] = false;
+        } else if (initNum == 2) {
+            priorTicksOutputs[cellID][1] = false;
+        } else {
+            priorTicksOutputs[cellID][0] = false;
+        }
+
+        return false;
     } else {                                                            //otherwise
-        return true;                                                    //return true
+        if (initNum >= 3) {
+            priorTicksOutputs[cellID][2] = true;
+        } else if (initNum == 2) {
+            priorTicksOutputs[cellID][1] = true;
+        } else {
+            priorTicksOutputs[cellID][0] = true;
+        }
+
+        return true;
     }
 }
 
@@ -300,28 +339,28 @@ int main() {
         c.cellularMatrix[i] = neuralList[i];    //load the neuron from a file into the matrix of the connectome
     }
 
+    initNum = 0;
     bool activated = true;                      //declare a boolean to set connectome as 'on'
 
-   /* while (activated) {                         //while it's true run the connectome
-        printCellularMatrix();                  //print the connectome out
-        cout << '\n';
-
-        printMotorMatrix();                     //print the motor cell matrix out
-        cout << '\n';
-
-        setNextState();                         //calculate next state of the connectome
-        saveNewState();                         //save the state of the connectome
-
+    while (activated) {                         //while it's true run the connectome
         getSensoryInputs();                     //get updated sensory information from a file
+
+        printCellularMatrix();                  //print the connectome out
+        printMotorMatrix();                     //print the motor cell matrix out
+
         setNextState();                         //calculate next state of the connectome
         saveNewState();                         //save the state of the connectome
-    }*/
 
-    getSensoryInputs();
-    setNextState();
+        glialWeightTuning();                    //tune weights of program to meet biologic needs
 
-    printCellularMatrix();
-    printMotorMatrix();
+        isFirstInit = false;                    //turn variable to false to indicate that connectome is now initialized
+
+        initNum++;                              //increments initNum for use by hebbian function
+
+        if (initNum >= 3) {                     //if initNum reaches end of the output matrices scope then reset it to zero
+            initNum = 1;
+        }
+    }
 
     return 0;
 }
