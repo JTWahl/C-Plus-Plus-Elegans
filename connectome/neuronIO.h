@@ -8,14 +8,14 @@ neuron thermotaxis[5] = {c.cellularMatrix[9], c.cellularMatrix[10], c.cellularMa
 neuron chemorepulsion[4] = {c.cellularMatrix[162], c.cellularMatrix[163], c.cellularMatrix[164], c.cellularMatrix[165]}; //PHAL, PHAR, PHBL, PHBR, ASHL, ASHR, ADLL, ADLR --> -ASH, -ADL
 neuron chemoattraciton[2] = {c.cellularMatrix[40], c.cellularMatrix[41]}; //ASEL, ASER, AWAL?, AWAR?, AWCL?, AWCR? --> ASEL, ASER
 
-#define AVBL 56   //- forward
-#define AVBR 57   //- forward
-#define PVCL 173  //- forward from harsh touch to tail
-#define PVCR 174  //- forward from harsh touch to tail
-#define AVAL 54   //- backward
-#define AVAR 55   //- backward
-#define AVDL 58   //- backward from head touch
-#define AVDR 59   //- backward from head touch
+//AVBL - forward
+//AVBR - forward
+//PVCL - forward from harsh touch to tail
+//PVCR - forward from harsh touch to tail
+//AVAL - backward
+//AVAR - backward
+//AVDL - backward from head touch
+//AVDR - backward from head touch
 
 neuron commandInterneurons[commandInterneuronSize] = {
     c.cellularMatrix[56], c.cellularMatrix[57], c.cellularMatrix[173], c.cellularMatrix[174], c.cellularMatrix[54], c.cellularMatrix[55], c.cellularMatrix[58], c.cellularMatrix[59]
@@ -29,398 +29,394 @@ bool getOutputsFromLastTick(int outputID) {
     return lastTickOutputs[outputID];
 }
 
-/*void glialWeightTuning() {
-    //did nosetouch activate?
-    if (noseTouchActive) {
-            //initiate escape behavior-- backing up, acceleration, lots of movement backward
-            //should be backing up a lot, should not be moving forward
-            //if no backward movement, increase weight to avd primarily, as well as ave/ava
+bool hasConnectingCell(int preID, int postID) {
+    for (int i = 0; i < c.cellularMatrix[postID].inputsLen; i++) {
+        if (c.cellularMatrix[postID].inputs[i] == preID) {
+            return true;
+        }
+    }
 
-        //if avdl is not active --> increase weights to avdr
-        if (!getCellOutputFromMatrix(AVDL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVDR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
+    return false;
+}
+
+void randomizeInnervatingWeight(int cellID) {
+    for (int i = 0; i < neuronCount; i++) {
+        if (hasConnectingCell(i, cellID)) {
+            for (int j = 0; j < c.cellularMatrix[cellID].weightsLen; j++) {
+                if (c.cellularMatrix[cellID].weights[j] == cellID && c.cellularMatrix[cellID].cellOutput) {
+                    c.cellularMatrix[cellID].weights[j] = calculateRandomWeight();
                 }
             }
         }
+    }
+}
 
-        //if avdr is not active --> increase weights to avdl
-        if (!getCellOutputFromMatrix(AVDR)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVDL) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
+/*void randomizeAllWeights () {
+    for (int i = 0; i < neuronCount; i++) {
+        for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
+            float randomWeight = 0.0;
+
+            if (c.cellularMatrix[i].weights[j >= 0]) {
+                while (randomWeight >= c.cellularMatrix[i].weights[j]) {
+                    srand (static_cast <unsigned> (time(0)));
+
+                    float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    randomWeight = round (randomWeight * 100) / 1000;
+
+                    int r = rand();
+                    bool isPos = r % 2;
+
+                    if (!isPos) {
+                       randomWeight = -randomWeight;
                     }
+
+                    c.cellularMatrix[i].weights[j] = randomWeight;
                 }
-            }
-        }
-    }else if (lightAvoidanceActive) {
-            //initiates reversals and acceleration
-            //should be moving a lot in one direction
-            //if no forward/backward motion, increase weight of avb, ava, ave
+            } else {
+                while (randomWeight < c.cellularMatrix[i].weights[j]) {
+                    srand (static_cast <unsigned> (time(0)));
 
-        //if only avbl is active and not avbr --> increase weights to avbr
-        if (!getCellOutputFromMatrix(AVBR) && getCellOutputFromMatrix(AVBL)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVBR) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
-                }
-            }
-        }
+                    float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    randomWeight = round (randomWeight * 100) / 1000;
 
-        //if only avbr is active and not avbl --> increase weights to avbl
-        if (!getCellOutputFromMatrix(AVBL) && getCellOutputFromMatrix(AVBR)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVBL) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
-                }
-            }
-        }
+                    int r = rand();
+                    bool isPos = r % 2;
 
-        //if only aval and not avar is active --> increase weights to aval
-        if (!getCellOutputFromMatrix(AVAR) && getCellOutputFromMatrix(AVAL)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVAL) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
-                }
-            }
-        }
-
-        //if only avar and not aval is active --> increase weights to avar
-        if (!getCellOutputFromMatrix(AVAL) && getCellOutputFromMatrix(AVAR)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVAR) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
-                }
-            }
-        }
-
-        //if only avel and not aver is active --> increase weights to avel
-        if (!getCellOutputFromMatrix(AVER) && getCellOutputFromMatrix(AVEL)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
-                }
-            }
-        }
-
-        //if only aver and not avel is active --> increase weights to aver
-        if (!getCellOutputFromMatrix(AVEL) && getCellOutputFromMatrix(AVER)) {
-            for (int i = 0; i < neuronCount; i++) {
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                    }
-                }
-            }
-        }
-    } else if (gentleTouchActive) {
-        //small amount of backward locomotion if on head, forward if on back
-        //should be moving back if on head, forward if on back
-        //if no back or forward (respective) movement, then increase weight on neurons, increase avb (forward) or ava/ave (backward)
-
-        //if only avbl is active and not avbr --> increase weights to avbr
-        if (!getCellOutputFromMatrix(AVBR) && getCellOutputFromMatrix(AVBL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only avbr is active and not avbl --> increase weights to avbl
-        if (!getCellOutputFromMatrix(AVBL) && getCellOutputFromMatrix(AVBR)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only aval and not avar is active --> increase weights to aval
-        if (!getCellOutputFromMatrix(AVAR) && getCellOutputFromMatrix(AVAL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVAL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only avar and not aval is active --> increase weights to avar
-        if (!getCellOutputFromMatrix(AVAL) && getCellOutputFromMatrix(AVAR)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVAR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only avel and not aver is active --> increase weights to avel
-        if (!getCellOutputFromMatrix(AVER) && getCellOutputFromMatrix(AVEL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only aver and not avel is active --> increase weights to aver
-        if (!getCellOutputFromMatrix(AVEL) && getCellOutputFromMatrix(AVER)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-    } else if (harshTouchActive) {
-        //escape response, lots of backward locomotion if on head, forward if on back
-        //should be moving back if on head, forward if on back
-        //if no back or forward (respective) movement, then increase weight on neurons, increase avb (forward) or ava/ave (backward)
-
-        //if only avbl is active and not avbr --> increase weights to avbr
-        if (!getCellOutputFromMatrix(AVBR) && getCellOutputFromMatrix(AVBL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();           //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only avbr is active and not avbl --> increase weights to avbl
-        if (!getCellOutputFromMatrix(AVBL) && getCellOutputFromMatrix(AVBR)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only aval and not avar is active --> increase weights to aval
-        if (!getCellOutputFromMatrix(AVAR) && getCellOutputFromMatrix(AVAL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVAL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only avar and not aval is active --> increase weights to avar
-        if (!getCellOutputFromMatrix(AVAL) && getCellOutputFromMatrix(AVAR)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVAR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only avel and not aver is active --> increase weights to avel
-        if (!getCellOutputFromMatrix(AVER) && getCellOutputFromMatrix(AVEL)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if only aver and not avel is active --> increase weights to aver
-        if (!getCellOutputFromMatrix(AVEL) && getCellOutputFromMatrix(AVER)) {                            //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-    } else if (thermotaxisActive) {
-        //positive thermotaxis moves to heat, negative moves to cold, both use AFD, causes worm to bias reversals and movement to one gradient
-        //should be moving a lot in one direction
-        //if no forward/backward motion, increase weight of all movement neurons, increase ave, avb, ava
-
-        //if no avel/aver and no avbl/avbr and no aval/avar --> increase weights to avel, aver, avbl, avbr, aval, avar
-        if (!getCellOutputFromMatrix(AVBL) && !getCellOutputFromMatrix(AVBR) && !getCellOutputFromMatrix(AVEL) &&
-            !getCellOutputFromMatrix(AVER) && !getCellOutputFromMatrix(AVAL) && !getCellOutputFromMatrix(AVAR)) {              //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
+                    if (isPos) {
+                       randomWeight = -randomWeight;
                     }
 
-                    if (c.cellularMatrix[i].inputs[j] == AVBR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVEL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVAL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVAR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-    } else if (chemorepulsionActive) {
-        //escape behavior, few reversals, slow movement away from positive gradient
-        //if no forward/backward motion, increase weight of all movement neurons, increase ave, avb, ava
-
-        //if no avel/aver and no avbl/avbr and no aval/avar --> increase weights to avel, aver, avbl, avbr, aval, avar
-        if (!getCellOutputFromMatrix(AVBL) && !getCellOutputFromMatrix(AVBR) && !getCellOutputFromMatrix(AVEL) &&
-            !getCellOutputFromMatrix(AVER) && !getCellOutputFromMatrix(AVAL) && !getCellOutputFromMatrix(AVAR)) {              //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVBR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVEL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVAL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-
-                    if (c.cellularMatrix[i].inputs[j] == AVAR) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = calculateRandomWeight();             //increase the weight
-                    }
-                }
-            }
-        }
-    } else if (chemoattractionActive) {
-        //causes general movement toward a positive gradient, slow moving, requent small reversals/turns
-        //should be switching directions frequently
-        //if both of a pair are active, decrease/increase weights to make skewed and increase reversals if AVBL/AVBR, AVAL/AVAR, or AVEL/AVER then decrease an L or R
-
-        //if both avbl and avbr --> randomly decrease weights to one, increase to other
-        if (!getCellOutputFromMatrix(AVBL) && !getCellOutputFromMatrix(AVBR)) {              //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVBL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = 0;             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if both aval and avar --> randomly decrease weights to one, increase to other
-        if (!getCellOutputFromMatrix(AVAL) && !getCellOutputFromMatrix(AVAR)) {              //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVAL) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = 0;             //increase the weight
-                    }
-                }
-            }
-        }
-
-        //if both avel and aver --> randomly decrease weights to one, increase to other
-        if (!getCellOutputFromMatrix(AVEL) && !getCellOutputFromMatrix(AVER)) {              //if AVDL is not active
-            for (int i = 0; i < neuronCount; i++) {                      //for every neuron in the network
-                for (int j = 0; j < getCellInputLenFromMatrix(i); j++) { //for every input in a given neuron
-                    if (c.cellularMatrix[i].inputs[j] == AVER) {         //if the input contains the cell ID to AVDR
-                        c.cellularMatrix[i].weights[j] = 0;             //increase the weight
-                    }
-                }
-            }
-        }
-    } else {
-        for (int i = 0; i < neuronCount; i++) {
-            for (int j = 0; j < getCellInputLenFromMatrix(i); j++) {
-                if (c.cellularMatrix[i]. inputs[j] == AVBL) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVBR) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == PVCL) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == PVCR) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVAL) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVAR) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVDL) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVDR) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVEL) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
-                }
-
-                if (c.cellularMatrix[i]. inputs[j] == AVER) {
-                        if (c.cellularMatrix[i].weights[j] <= .1) c.cellularMatrix[i].weights[j] = calculateRandomWeight();
+                    c.cellularMatrix[i].weights[j] = randomWeight;
                 }
             }
         }
     }
 }*/
+
+void glialWeightTuning(bool nukeWeights) {
+    //if chosen, glial function will simply randomize all weights in the network
+    if (nukeWeights) {
+        for (int i = 0; i < neuronCount; i++) {
+            for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
+                float rand = calculateRandomWeight();
+
+                if (rand < 0) {
+                    if (c.cellularMatrix[i].weights[j] >= 0) c.cellularMatrix[i].weights[j] = -rand;
+                    if (c.cellularMatrix[i].weights[j] < 0)  c.cellularMatrix[i].weights[j] = rand;
+                } else {
+                    if (c.cellularMatrix[i].weights[j] >= 0) c.cellularMatrix[i].weights[j] = rand;
+                    if (c.cellularMatrix[i].weights[j] < 0)  c.cellularMatrix[i].weights[j] = -rand;
+
+                }
+            }
+        }
+    } else {
+       if (noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
+            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
+                randomizeInnervatingWeight(ASJL);
+                randomizeInnervatingWeight(ASJR);
+                randomizeInnervatingWeight(AWBL);
+                randomizeInnervatingWeight(AWBR);
+                randomizeInnervatingWeight(ASKL);
+                randomizeInnervatingWeight(ASKR);
+
+            //randomize gentle - alml, almr, plml, plmr, avml, avmr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PLML);
+                randomizeInnervatingWeight(PLMR);
+
+            //randomize harsh - alml, almr, pvdl, pvdr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PVDL);
+                randomizeInnervatingWeight(PVDR);
+
+            //randomize thermo - afdl, afdr, phcl, phcr
+                randomizeInnervatingWeight(AFDL);
+                randomizeInnervatingWeight(AFDR);
+                randomizeInnervatingWeight(PHCL);
+                randomizeInnervatingWeight(PHCR);
+
+            //randomize repul - phal, phar, phbl, phbr
+                randomizeInnervatingWeight(PHAL);
+                randomizeInnervatingWeight(PHAR);
+                randomizeInnervatingWeight(PHBL);
+                randomizeInnervatingWeight(PHBR);
+
+            //randomize attr - asel, aser
+                randomizeInnervatingWeight(ASEL);
+                randomizeInnervatingWeight(ASER);
+
+        }
+
+        //if only light avoidance
+        if (!noseTouchActive && lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
+            //randomize all other neurons that innervate the other functions
+            //randomize nose - ashl, ashr, flpl, flpr
+                randomizeInnervatingWeight(FLPL);
+                randomizeInnervatingWeight(FLPR);
+
+            //randomize gentle - alml, almr, plml, plmr, avml, avmr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PLML);
+                randomizeInnervatingWeight(PLMR);
+
+            //randomize harsh - alml, almr, pvdl, pvdr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PVDL);
+                randomizeInnervatingWeight(PVDR);
+
+            //randomize thermo - afdl, afdr, phcl, phcr
+                randomizeInnervatingWeight(AFDL);
+                randomizeInnervatingWeight(AFDR);
+                randomizeInnervatingWeight(PHCL);
+                randomizeInnervatingWeight(PHCR);
+
+            //randomize repul - phal, phar, phbl, phbr
+                randomizeInnervatingWeight(PHAL);
+                randomizeInnervatingWeight(PHAR);
+                randomizeInnervatingWeight(PHBL);
+                randomizeInnervatingWeight(PHBR);
+
+            //randomize attr - asel, aser
+                randomizeInnervatingWeight(ASEL);
+                randomizeInnervatingWeight(ASER);
+
+        }
+
+        //if only gentle touch
+        if (!noseTouchActive && !lightAvoidanceActive && gentleTouchActive && ! harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
+            //randomize all other neurons that innervate the other functions
+            //randomize nose - ashl, ashr, flpl, flpr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(FLPL);
+                randomizeInnervatingWeight(FLPR);
+
+            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(ASJL);
+                randomizeInnervatingWeight(ASJR);
+                randomizeInnervatingWeight(AWBL);
+                randomizeInnervatingWeight(AWBR);
+                randomizeInnervatingWeight(ASKL);
+                randomizeInnervatingWeight(ASKR);
+
+            //randomize harsh - alml, almr, pvdl, pvdr
+                randomizeInnervatingWeight(PVDL);
+                randomizeInnervatingWeight(PVDR);
+
+            //randomize thermo - afdl, afdr, phcl, phcr
+                randomizeInnervatingWeight(AFDL);
+                randomizeInnervatingWeight(AFDR);
+                randomizeInnervatingWeight(PHCL);
+                randomizeInnervatingWeight(PHCR);
+
+            //randomize repul - phal, phar, phbl, phbr
+                randomizeInnervatingWeight(PHAL);
+                randomizeInnervatingWeight(PHAR);
+                randomizeInnervatingWeight(PHBL);
+                randomizeInnervatingWeight(PHBR);
+
+            //randomize attr - asel, aser
+                randomizeInnervatingWeight(ASEL);
+                randomizeInnervatingWeight(ASER);
+
+        }
+
+        //if only harsh touch
+        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
+            //randomize all other neurons that innervate the other functions
+            //randomize nose - ashl, ashr, flpl, flpr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(FLPL);
+                randomizeInnervatingWeight(FLPR);
+
+            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(ASJL);
+                randomizeInnervatingWeight(ASJR);
+                randomizeInnervatingWeight(AWBL);
+                randomizeInnervatingWeight(AWBR);
+                randomizeInnervatingWeight(ASKL);
+                randomizeInnervatingWeight(ASKR);
+
+            //randomize gentle - alml, almr, plml, plmr, avml, avmr
+                randomizeInnervatingWeight(PLML);
+                randomizeInnervatingWeight(PLMR);
+
+            //randomize thermo - afdl, afdr, phcl, phcr
+                randomizeInnervatingWeight(AFDL);
+                randomizeInnervatingWeight(AFDR);
+                randomizeInnervatingWeight(PHCL);
+                randomizeInnervatingWeight(PHCR);
+
+            //randomize repul - phal, phar, phbl, phbr
+                randomizeInnervatingWeight(PHAL);
+                randomizeInnervatingWeight(PHAR);
+                randomizeInnervatingWeight(PHBL);
+                randomizeInnervatingWeight(PHBR);
+
+            //randomize attr - asel, aser
+                randomizeInnervatingWeight(ASEL);
+                randomizeInnervatingWeight(ASER);
+
+        }
+
+        //if only thermotaxis
+        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
+            thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
+            //randomize all other neurons that innervate the other functions
+            //randomize nose - ashl, ashr, flpl, flpr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(FLPL);
+                randomizeInnervatingWeight(FLPR);
+
+            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(ASJL);
+                randomizeInnervatingWeight(ASJR);
+                randomizeInnervatingWeight(AWBL);
+                randomizeInnervatingWeight(AWBR);
+                randomizeInnervatingWeight(ASKL);
+                randomizeInnervatingWeight(ASKR);
+
+            //randomize gentle - alml, almr, plml, plmr, avml, avmr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PLML);
+                randomizeInnervatingWeight(PLMR);
+
+            //randomize harsh - alml, almr, pvdl, pvdr
+                randomizeInnervatingWeight(PVDL);
+                randomizeInnervatingWeight(PVDR);
+
+            //randomize repul - phal, phar, phbl, phbr
+                randomizeInnervatingWeight(PHAL);
+                randomizeInnervatingWeight(PHAR);
+                randomizeInnervatingWeight(PHBL);
+                randomizeInnervatingWeight(PHBR);
+
+            //randomize attr - asel, aser
+                randomizeInnervatingWeight(ASEL);
+                randomizeInnervatingWeight(ASER);
+
+        }
+
+        //if only chemorepulsion
+        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
+            !thermotaxisActive && chemorepulsionActive && !chemoattractionActive) {
+            //randomize all other neurons that innervate the other functions
+            //randomize nose - ashl, ashr, flpl, flpr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(FLPL);
+                randomizeInnervatingWeight(FLPR);
+
+            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(ASJL);
+                randomizeInnervatingWeight(ASJR);
+                randomizeInnervatingWeight(AWBL);
+                randomizeInnervatingWeight(AWBR);
+                randomizeInnervatingWeight(ASKL);
+                randomizeInnervatingWeight(ASKR);
+
+            //randomize gentle - alml, almr, plml, plmr, avml, avmr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PLML);
+                randomizeInnervatingWeight(PLMR);
+
+            //randomize harsh - alml, almr, pvdl, pvdr
+                randomizeInnervatingWeight(PVDL);
+                randomizeInnervatingWeight(PVDR);
+
+            //randomize thermo - afdl, afdr, phcl, phcr
+                randomizeInnervatingWeight(AFDL);
+                randomizeInnervatingWeight(AFDR);
+                randomizeInnervatingWeight(PHCL);
+                randomizeInnervatingWeight(PHCR);
+
+            //randomize attr - asel, aser
+                randomizeInnervatingWeight(ASEL);
+                randomizeInnervatingWeight(ASER);
+
+        }
+
+        //if only chemoattraction
+        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && chemoattractionActive) {
+            //inhibit all other neurons that innervate the other functions
+            //randomize nose - ashl, ashr, flpl, flpr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(FLPL);
+                randomizeInnervatingWeight(FLPR);
+
+            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
+                randomizeInnervatingWeight(ASHL);
+                randomizeInnervatingWeight(ASHR);
+                randomizeInnervatingWeight(ASJL);
+                randomizeInnervatingWeight(ASJR);
+                randomizeInnervatingWeight(AWBL);
+                randomizeInnervatingWeight(AWBR);
+                randomizeInnervatingWeight(ASKL);
+                randomizeInnervatingWeight(ASKR);
+
+            //randomize gentle - alml, almr, plml, plmr, avml, avmr
+                randomizeInnervatingWeight(ALML);
+                randomizeInnervatingWeight(ALMR);
+                randomizeInnervatingWeight(PLML);
+                randomizeInnervatingWeight(PLMR);
+
+            //randomize harsh - alml, almr, pvdl, pvdr
+                randomizeInnervatingWeight(PVDL);
+                randomizeInnervatingWeight(PVDR);
+
+            //randomize thermo - afdl, afdr, phcl, phcr
+                randomizeInnervatingWeight(AFDL);
+                randomizeInnervatingWeight(AFDR);
+                randomizeInnervatingWeight(PHCL);
+                randomizeInnervatingWeight(PHCR);
+
+            //randomize repul - phal, phar, phbl, phbr
+                randomizeInnervatingWeight(PHAL);
+                randomizeInnervatingWeight(PHAR);
+                randomizeInnervatingWeight(PHBL);
+                randomizeInnervatingWeight(PHBR);
+
+        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {    //if none are active
+            //in addition, randomize all network weights, keeping only their sign (inhibitory/excitatory)
+                for (int j = 0; j < neuronCount; j++) {
+                    for (int k = 0; k < c.cellularMatrix[j].weightsLen; k++) {
+                        float newWeight = calculateRandomWeight();
+
+                        if (newWeight <= 0 && c.cellularMatrix[j].weights[k] <= 0) {
+                            c.cellularMatrix[j].weights[k] = -newWeight;
+                        } else {
+                            c.cellularMatrix[j].weights[k] = newWeight;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 bool getMotorCellState(int cellID) {
 	bool cmdInterneuronActivations[commandInterneuronSize] = {};

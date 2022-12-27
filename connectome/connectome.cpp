@@ -1,4 +1,9 @@
-//TODO: are output neurons actually corresponding with proper inputs? any way to tune weights to avoid false motor output per input
+//TODO: write glia() function to tune weights based on current IO values
+   //if a command interneuron is active when it should not be, the function randomizes all weights that link to it until it fixes the problem
+   //if a command interneuron is not active when it should be, it randomizes weights until it fixes the problem again
+   //it needs to selectively choose the weights to randomize though, so as not to randomize all the weights in the network
+   //this means that we need to find data on the circuits
+
 //TODO: why does threshold have to be so low?
 //TODO: make code modular for any network!
 
@@ -227,7 +232,7 @@ bool activationFunction (int cellID) {          	                    //activatio
 
     for (int i = 0; i < inputLen; i++) {                              //iterate over all possible connections
         productMatrix[i] = neuronWeights[i] * inputValues[i];           //fill a matrix with the product of the Wi and Xi values
-        if (!isFirstInit) LTPandD(i, cellID);                           //for each connection do hebbian logic to create new weights for next tick
+        if (!isFirstInit) hebbian(i, cellID);                           //for each connection do hebbian logic to create new weights for next tick
 //        cout << "productMatrix: " << productMatrix[i] << endl;
     }
 
@@ -284,21 +289,26 @@ void setNextState() {                  			        //function to update values in
 Function to save the current state of the connectomes cellular matrix to the matrix file.
 */
 void saveNewState() {
-    for (int i = 0; i < neuronCount; i++) {             //for every cell in the connectome
-        neuronToString(getNeuronFromMatrix(i));         //call a function to write its data to a file
+    matrixFile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt");      //open the file
+
+    for (int i = 0; i < neuronCount; i++) {
+        neuronToString(c.cellularMatrix[i]);
     }
+
+    matrixFile.close();
 }
 
 /*
 Main function that runs connectome in a loop
 */
 int main() {
-    for (int i = 1; i <= neuronCount; i++) {    //for every neuron in the network
+    for (int i = 0; i <= neuronCount; i++) {    //for every neuron in the network
         c.cellularMatrix[i] = neuralList[i];    //load the neuron from a file into the matrix of the connectome
     }
 
     initNum = 0;
     bool activated = true;                      //declare a boolean to set connectome as 'on'
+    bool randAllWeights = false;
 
     while (activated) {                         //while it's true run the connectome
         getSensoryInputs();                     //get updated sensory information from a file
@@ -307,9 +317,9 @@ int main() {
         printMotorMatrix();                     //print the motor cell matrix out
 
         setNextState();                         //calculate next state of the connectome
-        //saveNewState();                         //save the state of the connectome
+        saveNewState();                         //save the state of the connectome
 
-        //glialWeightTuning();                    //tune weights of program to meet biologic needs
+        glialWeightTuning(randAllWeights);                    //tune weights of program to meet biologic needs
 
         isFirstInit = false;                    //turn variable to false to indicate that connectome is now initialized
 
