@@ -1,11 +1,7 @@
-//TODO: write glia() function to tune weights based on current IO values
-   //if a command interneuron is active when it should not be, the function randomizes all weights that link to it until it fixes the problem
-   //if a command interneuron is not active when it should be, it randomizes weights until it fixes the problem again
-   //it needs to selectively choose the weights to randomize though, so as not to randomize all the weights in the network
-   //this means that we need to find data on the circuits
-
-//TODO: why does threshold have to be so low?
-//TODO: make code modular for any network!
+//TODO: implement weight vector normalization to create competition between weights, effectively avoiding either 0 or 1 dynamical system convergence
+//TODO: decide if we can salvage the idea of a "glial function" that supervises weights or if we should save it for the FPGA version
+//TODO: add arduino/pi compatability! allow program to interface with wormybots to demonstrate
+//TODO: build new wormybot to house my personal ANN model... add an LCD face? Questions, questions...
 
 /* Note 1
 ORDER OF STRETCH GOALS:
@@ -89,11 +85,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[0] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[0] = false;
             }
         }
                 //AVBR
@@ -104,11 +98,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[1] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[1] = false;
             }
         }
                 //PVCL
@@ -118,11 +110,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[2] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[2] = false;
             }
         }
                 //PVCR
@@ -132,11 +122,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[3] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[3] = false;
             }
         }
                 //AVAL
@@ -146,11 +134,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[4] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[4] = false;
             }
         }
                 //AVAR
@@ -160,11 +146,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[5] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[5] = false;
             }
         }
                 //AVDL
@@ -174,11 +158,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[6] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[6] = false;
             }
         }
                 //AVDR
@@ -188,11 +170,9 @@ void printMotorMatrix() {
             if (cellOutput) {
                 cout << " [1]  ";
                 motorIOfile << "1" << '\n';
-                lastTickOutputs[7] = true;
             } else {
                 cout << " [0]  ";
                 motorIOfile << "0" << '\n';
-                lastTickOutputs[7] = false;
             }
         }
     }
@@ -232,7 +212,6 @@ bool activationFunction (int cellID) {          	                    //activatio
 
     for (int i = 0; i < inputLen; i++) {                              //iterate over all possible connections
         productMatrix[i] = neuronWeights[i] * inputValues[i];           //fill a matrix with the product of the Wi and Xi values
-        if (!isFirstInit) hebbian(i, cellID);                           //for each connection do hebbian logic to create new weights for next tick
 //        cout << "productMatrix: " << productMatrix[i] << endl;
     }
 
@@ -245,24 +224,8 @@ bool activationFunction (int cellID) {          	                    //activatio
 //    cout << "Threshold: " << threshold << endl;
 
     if (finalSummation < threshold) {       //if the running sum is less than the given neurons threshold
-        if (initNum >= 3) {
-            priorTicksOutputs[cellID][2] = false;
-        } else if (initNum == 2) {
-            priorTicksOutputs[cellID][1] = false;
-        } else {
-            priorTicksOutputs[cellID][0] = false;
-        }
-
         return false;
     } else {                                                            //otherwise
-        if (initNum >= 3) {
-            priorTicksOutputs[cellID][2] = true;
-        } else if (initNum == 2) {
-            priorTicksOutputs[cellID][1] = true;
-        } else {
-            priorTicksOutputs[cellID][0] = true;
-        }
-
         return true;
     }
 }
@@ -273,7 +236,6 @@ Function to set the next tick of the connectome.
 void setNextState() {                  			        //function to update values in connectome to next state using the activation function
   for (int i = 0; i < neuronCount; i++) {		        //for every cell in the connectome
       bool activationVal = activationFunction(i);
-      //TODO: for some reason activationFunction() always returns true??
 
       if (activationVal) {						        //if the activation function of that cell returns true
           c.outputs[i] = 1;								//save its output in the connectomes output matrix as true
@@ -306,9 +268,7 @@ int main() {
         c.cellularMatrix[i] = neuralList[i];    //load the neuron from a file into the matrix of the connectome
     }
 
-    initNum = 0;
     bool activated = true;                      //declare a boolean to set connectome as 'on'
-    bool randAllWeights = false;
 
     while (activated) {                         //while it's true run the connectome
         getSensoryInputs();                     //get updated sensory information from a file
@@ -317,17 +277,7 @@ int main() {
         printMotorMatrix();                     //print the motor cell matrix out
 
         setNextState();                         //calculate next state of the connectome
-        saveNewState();                         //save the state of the connectome
-
-        glialWeightTuning(randAllWeights);                    //tune weights of program to meet biologic needs
-
-        isFirstInit = false;                    //turn variable to false to indicate that connectome is now initialized
-
-        initNum++;                              //increments initNum for use by hebbian function
-
-        if (initNum >= 3) {                     //if initNum reaches end of the output matrices scope then reset it to zero
-            initNum = 1;
-        }
+        //saveNewState();                         //save the state of the connectome
     }
 
     return 0;

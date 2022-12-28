@@ -10,25 +10,23 @@ const int maxSynapse = 500;
 const int commandInterneuronSize = 8;
 const int noseTouchSize = 2;
 const int lightAvoidanceSize = 8;
-const int gentleTouchSize = 5;
+const int gentleTouchForwardSize = 2;
+const int gentleTouchBackwardSize = 3;
 const int harshTouchSize = 4;
 const int thermotaxisSize = 8;
 const int chemorepulsionSize = 8;
 const int chemoattractionSize = 6;
-const float threshold = .05;
+const float threshold = 1.0;
 
-int initNum = 0;
-bool isFirstInit = true;        //init check variable
-bool priorTicksOutputs[302][3] = {}; //holds last 5 outputs for every neuron in the network
-bool lastTickInputs[7] = {};    //last inputs array
-bool lastTickOutputs[10] = {};  //last outputs array
 bool noseTouchActive = false;    //input check variables
 bool lightAvoidanceActive = false;
-bool gentleTouchActive = false;
+bool gentleTouchForwardActive = false;
+bool gentleTouchBackwardActive = false;
 bool harshTouchActive = false;
 bool thermotaxisActive = false;
 bool chemorepulsionActive = false;
 bool chemoattractionActive = false;
+
 bool avblActive = false;        //output check variables
 bool avbrActive = false;
 bool pvclActive = false;
@@ -422,10 +420,12 @@ void updateOutputArray(int cellID, bool outputVal) {
 }
 
 float calculateRandomWeight() {
+    int adjustmentConst = 100;
+
     srand (static_cast <unsigned> (time(0)));
 
     float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-    randomWeight = round (randomWeight * 100) / 1000;
+    randomWeight = round (randomWeight * adjustmentConst) / (adjustmentConst * 10);
 
     int r = rand();
     bool isPos = r % 2;
@@ -565,35 +565,30 @@ neuron stringToNeuron(int id) {
 }
 
 void hebbian(int preID, int postID) {
-    float posHebbianFactor = .001;
-    float negHebbianFactor = -1.0;
-    float runningSum = 0.0;
+//Hebb's Rule: Wdelta = n*X*Y
+//where Wdelta is the change in weights, n is the learning rate, X is the presynaptic input, and Y is the postsynaptic output
+//LTD can be approximated by applying a z for a non-hebbian learning rate in place of a multiplication by x and y
 
-    if (initNum == 0) {
-        if (priorTicksOutputs[preID][0]) runningSum++;
-    } else if (initNum == 2) {
-        if (priorTicksOutputs[preID][0]) runningSum++;
-        if (priorTicksOutputs[preID][1]) runningSum++;
-        runningSum /= 1;
-    } else {
-        if (priorTicksOutputs[preID][0]) runningSum++;
-        if (priorTicksOutputs[preID][1]) runningSum++;
-        if (priorTicksOutputs[preID][2]) runningSum++;
-        runningSum /= 2;
-    }
+    int x = 0;
+    int y = 0;
+    float minWeight = -1.0;
+    float maxWeight = 1.0;
+    float n = .1;
+    float z = .1;
 
     for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
         if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
             for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
                 if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
-                    if (priorTicksOutputs[preID][1]) {               //if the preID cells output is true
-                        c.cellularMatrix[i].weights[j] += posHebbianFactor * runningSum;    //add the hebbian factor to the postID cells weight for the preID cell
-                    } else {                                                //otherwise
-                        if (c.cellularMatrix[i].weights[j] < posHebbianFactor * runningSum) {   //if the weight of the neuron is less than the hebbian adjustment
-                            c.cellularMatrix[i].weights[j] = 0;                 //just set that weight to zero
-                        } else {                                                //if its more than the adjustment
-                            c.cellularMatrix[i].weights[j] = negHebbianFactor;    //subtract the factor form the postID cells weight for the preID cell
-                        }
+                    if (c.cellularMatrix[preID].cellOutput) x = 1;
+                    if (c.cellularMatrix[i].cellOutput) y = 1;
+
+                    if (c.cellularMatrix[preID].cellOutput && c.cellularMatrix[postID].cellOutput) {
+                        if (c.cellularMatrix[i].weights[j] <= maxWeight) c.cellularMatrix[i].weights[j] += (x*y*n);
+                    }
+
+                    if (!c.cellularMatrix[preID].cellOutput && !c.cellularMatrix[postID].cellOutput){
+                        if (c.cellularMatrix[i].weights[j] >= minWeight) c.cellularMatrix[i].weights[j] -= z;
                     }
                 }
             }

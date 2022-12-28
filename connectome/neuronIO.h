@@ -2,7 +2,8 @@
 
 neuron noseTouch[4] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[114], c.cellularMatrix[115]}; //AIML, AIMR --> ASHL, ASHR, FLPL, FLPR, OLQ???
 neuron lightAvoidance[8] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[48], c.cellularMatrix[49], c.cellularMatrix[75], c.cellularMatrix[76], c.cellularMatrix[50], c.cellularMatrix[51]};
-neuron gentleTouch[5] = {c.cellularMatrix[24], c.cellularMatrix[25], c.cellularMatrix[168], c.cellularMatrix[169], c.cellularMatrix[72]};
+neuron gentleTouchForward[2] = {c.cellularMatrix[168], c.cellularMatrix[169]};
+neuron gentleTouchBackward[3] = {c.cellularMatrix[24], c.cellularMatrix[25], c.cellularMatrix[72]};
 neuron harshTouch[4] = {c.cellularMatrix[24], c.cellularMatrix[25], c.cellularMatrix[175], c.cellularMatrix[176]};
 neuron thermotaxis[5] = {c.cellularMatrix[9], c.cellularMatrix[10], c.cellularMatrix[16], c.cellularMatrix[166], c.cellularMatrix[167]}; //AFDL, AFDR, AWC (SEEK OUT), AIML, AIMR, PHC (AVOID) --> AFDL, AFDR, PHCL, PHCR
 neuron chemorepulsion[4] = {c.cellularMatrix[162], c.cellularMatrix[163], c.cellularMatrix[164], c.cellularMatrix[165]}; //PHAL, PHAR, PHBL, PHBR, ASHL, ASHR, ADLL, ADLR --> -ASH, -ADL
@@ -21,397 +22,84 @@ neuron commandInterneurons[commandInterneuronSize] = {
     c.cellularMatrix[56], c.cellularMatrix[57], c.cellularMatrix[173], c.cellularMatrix[174], c.cellularMatrix[54], c.cellularMatrix[55], c.cellularMatrix[58], c.cellularMatrix[59]
 };
 
-bool getInputsFromLastTick(int inputID) {
-    return lastTickInputs[inputID];
-}
+void glialWeightTuning() {
+    bool useGlia = false;
+    float glialFactor = .05;
 
-bool getOutputsFromLastTick(int outputID) {
-    return lastTickOutputs[outputID];
-}
+    /*
+    THREE USE-CASES OF THIS FUNCTION
+            1 - if command neuron is active when no input activated it --> use glia to randomize
+            2 - if a command neuron is inactive when an input activated it --> use glia to randomize
+            3 - if certain input neurons are active and the wrong command neurons are on --> use glia to randomize
+    */
 
-bool hasConnectingCell(int preID, int postID) {
-    for (int i = 0; i < c.cellularMatrix[postID].inputsLen; i++) {
-        if (c.cellularMatrix[postID].inputs[i] == preID) {
-            return true;
+
+    //USE CASE 1 - if any command interneurons are on and all inputs are off
+    if (c.cellularMatrix[AVBL].cellOutput || c.cellularMatrix[AVBR].cellOutput || c.cellularMatrix[PVCL].cellOutput || c.cellularMatrix[PVCR].cellOutput ||
+        c.cellularMatrix[AVAL].cellOutput || c.cellularMatrix[AVAR].cellOutput || c.cellularMatrix[AVDL].cellOutput || c.cellularMatrix[AVDR].cellOutput) {
+            if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchForwardActive && !gentleTouchBackwardActive && ! harshTouchActive &&
+            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) useGlia = true;
+    }
+
+     //USE CASE 2 - If any inputs are on and all command neurons are off
+    if (noseTouchActive  || lightAvoidanceActive  || gentleTouchForwardActive || gentleTouchBackwardActive || harshTouchActive ||
+        thermotaxisActive || chemorepulsionActive || chemoattractionActive ) {
+            if (!c.cellularMatrix[AVBL].cellOutput && !c.cellularMatrix[AVBR].cellOutput && !c.cellularMatrix[PVCL].cellOutput && !c.cellularMatrix[PVCR].cellOutput &&
+            !c.cellularMatrix[AVAL].cellOutput && !c.cellularMatrix[AVAR].cellOutput && !c.cellularMatrix[AVDL].cellOutput && !c.cellularMatrix[AVDR].cellOutput) useGlia = true;
+    }
+
+    //USE CASE 3
+    if (noseTouchActive) {
+        //check if going forward: avbl/r, pvcl/r
+        if (c.cellularMatrix[AVBL].cellOutput || c.cellularMatrix[AVBR].cellOutput ||
+            c.cellularMatrix[PVCL].cellOutput || c.cellularMatrix[PVCR].cellOutput) {
+            useGlia = true;
         }
     }
 
-    return false;
-}
-
-void randomizeInnervatingWeight(int cellID) {
-    for (int i = 0; i < neuronCount; i++) {
-        if (hasConnectingCell(i, cellID)) {
-            for (int j = 0; j < c.cellularMatrix[cellID].weightsLen; j++) {
-                if (c.cellularMatrix[cellID].weights[j] == cellID && c.cellularMatrix[cellID].cellOutput) {
-                    c.cellularMatrix[cellID].weights[j] = calculateRandomWeight();
-                }
-            }
+    if (gentleTouchForwardActive) {
+        //check if going backwards: aval/r, avdl/r
+        if (c.cellularMatrix[AVAL].cellOutput || c.cellularMatrix[AVAR].cellOutput ||
+            c.cellularMatrix[AVDL].cellOutput || c.cellularMatrix[AVDR].cellOutput) {
+            useGlia = true;
         }
     }
-}
 
-/*void randomizeAllWeights () {
-    for (int i = 0; i < neuronCount; i++) {
-        for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
-            float randomWeight = 0.0;
-
-            if (c.cellularMatrix[i].weights[j >= 0]) {
-                while (randomWeight >= c.cellularMatrix[i].weights[j]) {
-                    srand (static_cast <unsigned> (time(0)));
-
-                    float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                    randomWeight = round (randomWeight * 100) / 1000;
-
-                    int r = rand();
-                    bool isPos = r % 2;
-
-                    if (!isPos) {
-                       randomWeight = -randomWeight;
-                    }
-
-                    c.cellularMatrix[i].weights[j] = randomWeight;
-                }
-            } else {
-                while (randomWeight < c.cellularMatrix[i].weights[j]) {
-                    srand (static_cast <unsigned> (time(0)));
-
-                    float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                    randomWeight = round (randomWeight * 100) / 1000;
-
-                    int r = rand();
-                    bool isPos = r % 2;
-
-                    if (isPos) {
-                       randomWeight = -randomWeight;
-                    }
-
-                    c.cellularMatrix[i].weights[j] = randomWeight;
-                }
-            }
+    if (gentleTouchBackwardActive) {
+        //check if going forward: avbl/r, pvcl/r
+        if (c.cellularMatrix[AVBL].cellOutput || c.cellularMatrix[AVBR].cellOutput ||
+            c.cellularMatrix[PVCL].cellOutput || c.cellularMatrix[PVCR].cellOutput) {
+            useGlia = true;
         }
     }
-}*/
 
-void glialWeightTuning(bool nukeWeights) {
-    //if chosen, glial function will simply randomize all weights in the network
-    if (nukeWeights) {
-        for (int i = 0; i < neuronCount; i++) {
-            for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
-                float rand = calculateRandomWeight();
+    if (harshTouchActive) {
+        //check if only L or R of harsh touch cmd neurons are active: pvcl/r, avdl/r
+        if (((c.cellularMatrix[PVCL].cellOutput || c.cellularMatrix[AVDL].cellOutput) &&
+            (!c.cellularMatrix[PVCR].cellOutput || !c.cellularMatrix[AVDR].cellOutput)) ||
+            ((c.cellularMatrix[PVCR].cellOutput || c.cellularMatrix[AVDR].cellOutput) &&
+            (!c.cellularMatrix[PVCL].cellOutput || !c.cellularMatrix[AVDL].cellOutput))) {
+            useGlia = true;
+        }
+    }
 
-                if (rand < 0) {
-                    if (c.cellularMatrix[i].weights[j] >= 0) c.cellularMatrix[i].weights[j] = -rand;
-                    if (c.cellularMatrix[i].weights[j] < 0)  c.cellularMatrix[i].weights[j] = rand;
+    //RANDOMIZATION FUNCTION - randomizes all weights, retaining only the sign of the original
+    if (useGlia) {
+
+        for (int j = 0; j < neuronCount; j++) {
+            float newWeight = calculateRandomWeight();
+
+            for (int k = 0; k < c.cellularMatrix[j].weightsLen; k++) {
+                newWeight = abs(newWeight);
+
+                if (newWeight > glialFactor) {
+                    newWeight -= glialFactor;
+                }
+
+                if (c.cellularMatrix[j].weights[k] <= 0) {
+                    c.cellularMatrix[j].weights[j] = -newWeight;
                 } else {
-                    if (c.cellularMatrix[i].weights[j] >= 0) c.cellularMatrix[i].weights[j] = rand;
-                    if (c.cellularMatrix[i].weights[j] < 0)  c.cellularMatrix[i].weights[j] = -rand;
-
-                }
-            }
-        }
-    } else {
-       if (noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
-            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
-            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
-                randomizeInnervatingWeight(ASJL);
-                randomizeInnervatingWeight(ASJR);
-                randomizeInnervatingWeight(AWBL);
-                randomizeInnervatingWeight(AWBR);
-                randomizeInnervatingWeight(ASKL);
-                randomizeInnervatingWeight(ASKR);
-
-            //randomize gentle - alml, almr, plml, plmr, avml, avmr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PLML);
-                randomizeInnervatingWeight(PLMR);
-
-            //randomize harsh - alml, almr, pvdl, pvdr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PVDL);
-                randomizeInnervatingWeight(PVDR);
-
-            //randomize thermo - afdl, afdr, phcl, phcr
-                randomizeInnervatingWeight(AFDL);
-                randomizeInnervatingWeight(AFDR);
-                randomizeInnervatingWeight(PHCL);
-                randomizeInnervatingWeight(PHCR);
-
-            //randomize repul - phal, phar, phbl, phbr
-                randomizeInnervatingWeight(PHAL);
-                randomizeInnervatingWeight(PHAR);
-                randomizeInnervatingWeight(PHBL);
-                randomizeInnervatingWeight(PHBR);
-
-            //randomize attr - asel, aser
-                randomizeInnervatingWeight(ASEL);
-                randomizeInnervatingWeight(ASER);
-
-        }
-
-        //if only light avoidance
-        if (!noseTouchActive && lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
-            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
-            //randomize all other neurons that innervate the other functions
-            //randomize nose - ashl, ashr, flpl, flpr
-                randomizeInnervatingWeight(FLPL);
-                randomizeInnervatingWeight(FLPR);
-
-            //randomize gentle - alml, almr, plml, plmr, avml, avmr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PLML);
-                randomizeInnervatingWeight(PLMR);
-
-            //randomize harsh - alml, almr, pvdl, pvdr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PVDL);
-                randomizeInnervatingWeight(PVDR);
-
-            //randomize thermo - afdl, afdr, phcl, phcr
-                randomizeInnervatingWeight(AFDL);
-                randomizeInnervatingWeight(AFDR);
-                randomizeInnervatingWeight(PHCL);
-                randomizeInnervatingWeight(PHCR);
-
-            //randomize repul - phal, phar, phbl, phbr
-                randomizeInnervatingWeight(PHAL);
-                randomizeInnervatingWeight(PHAR);
-                randomizeInnervatingWeight(PHBL);
-                randomizeInnervatingWeight(PHBR);
-
-            //randomize attr - asel, aser
-                randomizeInnervatingWeight(ASEL);
-                randomizeInnervatingWeight(ASER);
-
-        }
-
-        //if only gentle touch
-        if (!noseTouchActive && !lightAvoidanceActive && gentleTouchActive && ! harshTouchActive &&
-            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
-            //randomize all other neurons that innervate the other functions
-            //randomize nose - ashl, ashr, flpl, flpr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(FLPL);
-                randomizeInnervatingWeight(FLPR);
-
-            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(ASJL);
-                randomizeInnervatingWeight(ASJR);
-                randomizeInnervatingWeight(AWBL);
-                randomizeInnervatingWeight(AWBR);
-                randomizeInnervatingWeight(ASKL);
-                randomizeInnervatingWeight(ASKR);
-
-            //randomize harsh - alml, almr, pvdl, pvdr
-                randomizeInnervatingWeight(PVDL);
-                randomizeInnervatingWeight(PVDR);
-
-            //randomize thermo - afdl, afdr, phcl, phcr
-                randomizeInnervatingWeight(AFDL);
-                randomizeInnervatingWeight(AFDR);
-                randomizeInnervatingWeight(PHCL);
-                randomizeInnervatingWeight(PHCR);
-
-            //randomize repul - phal, phar, phbl, phbr
-                randomizeInnervatingWeight(PHAL);
-                randomizeInnervatingWeight(PHAR);
-                randomizeInnervatingWeight(PHBL);
-                randomizeInnervatingWeight(PHBR);
-
-            //randomize attr - asel, aser
-                randomizeInnervatingWeight(ASEL);
-                randomizeInnervatingWeight(ASER);
-
-        }
-
-        //if only harsh touch
-        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && harshTouchActive &&
-            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
-            //randomize all other neurons that innervate the other functions
-            //randomize nose - ashl, ashr, flpl, flpr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(FLPL);
-                randomizeInnervatingWeight(FLPR);
-
-            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(ASJL);
-                randomizeInnervatingWeight(ASJR);
-                randomizeInnervatingWeight(AWBL);
-                randomizeInnervatingWeight(AWBR);
-                randomizeInnervatingWeight(ASKL);
-                randomizeInnervatingWeight(ASKR);
-
-            //randomize gentle - alml, almr, plml, plmr, avml, avmr
-                randomizeInnervatingWeight(PLML);
-                randomizeInnervatingWeight(PLMR);
-
-            //randomize thermo - afdl, afdr, phcl, phcr
-                randomizeInnervatingWeight(AFDL);
-                randomizeInnervatingWeight(AFDR);
-                randomizeInnervatingWeight(PHCL);
-                randomizeInnervatingWeight(PHCR);
-
-            //randomize repul - phal, phar, phbl, phbr
-                randomizeInnervatingWeight(PHAL);
-                randomizeInnervatingWeight(PHAR);
-                randomizeInnervatingWeight(PHBL);
-                randomizeInnervatingWeight(PHBR);
-
-            //randomize attr - asel, aser
-                randomizeInnervatingWeight(ASEL);
-                randomizeInnervatingWeight(ASER);
-
-        }
-
-        //if only thermotaxis
-        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
-            thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {
-            //randomize all other neurons that innervate the other functions
-            //randomize nose - ashl, ashr, flpl, flpr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(FLPL);
-                randomizeInnervatingWeight(FLPR);
-
-            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(ASJL);
-                randomizeInnervatingWeight(ASJR);
-                randomizeInnervatingWeight(AWBL);
-                randomizeInnervatingWeight(AWBR);
-                randomizeInnervatingWeight(ASKL);
-                randomizeInnervatingWeight(ASKR);
-
-            //randomize gentle - alml, almr, plml, plmr, avml, avmr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PLML);
-                randomizeInnervatingWeight(PLMR);
-
-            //randomize harsh - alml, almr, pvdl, pvdr
-                randomizeInnervatingWeight(PVDL);
-                randomizeInnervatingWeight(PVDR);
-
-            //randomize repul - phal, phar, phbl, phbr
-                randomizeInnervatingWeight(PHAL);
-                randomizeInnervatingWeight(PHAR);
-                randomizeInnervatingWeight(PHBL);
-                randomizeInnervatingWeight(PHBR);
-
-            //randomize attr - asel, aser
-                randomizeInnervatingWeight(ASEL);
-                randomizeInnervatingWeight(ASER);
-
-        }
-
-        //if only chemorepulsion
-        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
-            !thermotaxisActive && chemorepulsionActive && !chemoattractionActive) {
-            //randomize all other neurons that innervate the other functions
-            //randomize nose - ashl, ashr, flpl, flpr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(FLPL);
-                randomizeInnervatingWeight(FLPR);
-
-            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(ASJL);
-                randomizeInnervatingWeight(ASJR);
-                randomizeInnervatingWeight(AWBL);
-                randomizeInnervatingWeight(AWBR);
-                randomizeInnervatingWeight(ASKL);
-                randomizeInnervatingWeight(ASKR);
-
-            //randomize gentle - alml, almr, plml, plmr, avml, avmr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PLML);
-                randomizeInnervatingWeight(PLMR);
-
-            //randomize harsh - alml, almr, pvdl, pvdr
-                randomizeInnervatingWeight(PVDL);
-                randomizeInnervatingWeight(PVDR);
-
-            //randomize thermo - afdl, afdr, phcl, phcr
-                randomizeInnervatingWeight(AFDL);
-                randomizeInnervatingWeight(AFDR);
-                randomizeInnervatingWeight(PHCL);
-                randomizeInnervatingWeight(PHCR);
-
-            //randomize attr - asel, aser
-                randomizeInnervatingWeight(ASEL);
-                randomizeInnervatingWeight(ASER);
-
-        }
-
-        //if only chemoattraction
-        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
-            !thermotaxisActive && !chemorepulsionActive && chemoattractionActive) {
-            //inhibit all other neurons that innervate the other functions
-            //randomize nose - ashl, ashr, flpl, flpr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(FLPL);
-                randomizeInnervatingWeight(FLPR);
-
-            //randomize light - ashl, ashr, asjl, asjr, awbl, awbr, askl, askr
-                randomizeInnervatingWeight(ASHL);
-                randomizeInnervatingWeight(ASHR);
-                randomizeInnervatingWeight(ASJL);
-                randomizeInnervatingWeight(ASJR);
-                randomizeInnervatingWeight(AWBL);
-                randomizeInnervatingWeight(AWBR);
-                randomizeInnervatingWeight(ASKL);
-                randomizeInnervatingWeight(ASKR);
-
-            //randomize gentle - alml, almr, plml, plmr, avml, avmr
-                randomizeInnervatingWeight(ALML);
-                randomizeInnervatingWeight(ALMR);
-                randomizeInnervatingWeight(PLML);
-                randomizeInnervatingWeight(PLMR);
-
-            //randomize harsh - alml, almr, pvdl, pvdr
-                randomizeInnervatingWeight(PVDL);
-                randomizeInnervatingWeight(PVDR);
-
-            //randomize thermo - afdl, afdr, phcl, phcr
-                randomizeInnervatingWeight(AFDL);
-                randomizeInnervatingWeight(AFDR);
-                randomizeInnervatingWeight(PHCL);
-                randomizeInnervatingWeight(PHCR);
-
-            //randomize repul - phal, phar, phbl, phbr
-                randomizeInnervatingWeight(PHAL);
-                randomizeInnervatingWeight(PHAR);
-                randomizeInnervatingWeight(PHBL);
-                randomizeInnervatingWeight(PHBR);
-
-        if (!noseTouchActive && !lightAvoidanceActive && !gentleTouchActive && ! harshTouchActive &&
-            !thermotaxisActive && !chemorepulsionActive && !chemoattractionActive) {    //if none are active
-            //in addition, randomize all network weights, keeping only their sign (inhibitory/excitatory)
-                for (int j = 0; j < neuronCount; j++) {
-                    for (int k = 0; k < c.cellularMatrix[j].weightsLen; k++) {
-                        float newWeight = calculateRandomWeight();
-
-                        if (newWeight <= 0 && c.cellularMatrix[j].weights[k] <= 0) {
-                            c.cellularMatrix[j].weights[k] = -newWeight;
-                        } else {
-                            c.cellularMatrix[j].weights[k] = newWeight;
-                        }
-                    }
+                    c.cellularMatrix[j].weights[k] = newWeight;
                 }
             }
         }
@@ -460,17 +148,30 @@ void doLightAvoidance() {
 	}
 }
 
-void doGentleTouch() {
-	for (int i = 0; i < gentleTouchSize; i++) {
+void doGentleForwardTouch() {
+	for (int i = 0; i < gentleTouchForwardSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
 			//if gentletouch neuron is in cellular matrix then set output to true
                 int id = c.cellularMatrix[j].cellID;
 				if (id == 24 || id == 25 || id == 168 || id == 169 || id == 72) {
                     c.cellularMatrix[j].cellOutput = true;
-                    gentleTouchActive = true;
+                    gentleTouchForwardActive = true;
 				}
 		}
 	}
+}
+
+void doGentleBackwardTouch() {
+    for (int i = 0; i < gentleTouchBackwardSize; i++) {
+        for (int j = 0; j < neuronCount; j++) {
+            int id = c.cellularMatrix[j].cellID;
+            if (id == AVM || id == ALML || id == ALMR) {
+
+                c.cellularMatrix[j].cellOutput = true;
+                gentleTouchBackwardActive = true;
+            }
+        }
+    }
 }
 
 void doHarshTouch() {
@@ -478,7 +179,7 @@ void doHarshTouch() {
 		for (int j = 0; j < neuronCount; j++) {
 			//if harshtouch neuron is in cellular matrix then set output to true
                 int id = c.cellularMatrix[j].cellID;
-                if (id == 24 || id == 25 || id == 175 || id == 176) {
+                if (id == PLML || id == PLMR) {
                     c.cellularMatrix[j].cellOutput = true;
                     harshTouchActive = true;
                 }
@@ -534,7 +235,8 @@ void getSensoryInputs() {
     string data = "";
     string isNoseTouch = "";
     string isLightAvoidance = "";
-    string isGentleTouch = "";
+    string isGentleTouchForward = "";
+    string isGentleTouchBackward = "";
     string isHarshTouch = "";
     string isThermotaxis = "";
     string isChemorepulsion = "";
@@ -542,7 +244,8 @@ void getSensoryInputs() {
 
     noseTouchActive = false;
     lightAvoidanceActive = false;
-    gentleTouchActive = false;
+    gentleTouchForwardActive = false;
+    gentleTouchBackwardActive = false;
     harshTouchActive = false;
     thermotaxisActive = false;
     chemorepulsionActive = false;
@@ -556,7 +259,10 @@ void getSensoryInputs() {
         isLightAvoidance = data;
 
         getline(sensoryIOfile, data);
-        isGentleTouch = data;
+        isGentleTouchForward = data;
+
+        getline(sensoryIOfile, data);
+        isGentleTouchBackward = data;
 
         getline(sensoryIOfile, data);
         isHarshTouch = data;
@@ -572,51 +278,34 @@ void getSensoryInputs() {
 
         if (isNoseTouch == "1") {
             doNoseTouch();
-            lastTickInputs[0] = true;
-        } else {
-            lastTickInputs[0] = false;
         }
 
         if (isLightAvoidance == "1") {
             doLightAvoidance();
-            lastTickInputs[1] = true;
-        } else {
-            lastTickInputs[1] = false;
         }
 
-        if (isGentleTouch == "1") {
-            doGentleTouch();
-            lastTickInputs[2] = true;
-        } else {
-            lastTickInputs[2] = false;
+        if (isGentleTouchForward == "1") {
+            doGentleForwardTouch();
+        }
+
+        if (isGentleTouchBackward == "1") {
+            doGentleBackwardTouch();
         }
 
         if (isHarshTouch == "1") {
             doHarshTouch();
-            lastTickInputs[3] = true;
-        } else {
-            lastTickInputs[3] = false;
         }
 
         if (isThermotaxis == "1") {
             doThermotaxis();
-            lastTickInputs[4] = true;
-        } else {
-            lastTickInputs[4] = false;
         }
 
         if (isChemorepulsion == "1") {
             doChemorepulsion();
-            lastTickInputs[5] = true;
-        } else {
-            lastTickInputs[5] = false;
         }
 
         if (isChemoattraction == "1") {
             doChemoattraction();
-            lastTickInputs[6] = true;
-        } else {
-            lastTickInputs[6] = false;
         }
     }
 
