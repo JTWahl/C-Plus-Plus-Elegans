@@ -3,9 +3,9 @@
 
 using namespace std;
 
-ofstream matrixFile;
+ofstream matrixFile;    //sets up an output stream object
 
-const static int neuronCount = 302;
+const static int neuronCount = 302; //constants used by network
 const int maxSynapse = 500;
 const int commandInterneuronSize = 8;
 const int noseTouchSize = 2;
@@ -38,8 +38,9 @@ bool avdrActive = false;
 bool avelActive = false;
 bool averActive = false;
 
+int firingRates[neuronCount][3] = {};   //makes an array to hold output firing data
 
-#define ADAL 1
+#define ADAL 1  //list of all neuron names defined by their ID number for ease of use
 #define ADAR 2
 #define ADEL 3
 #define ADER 4
@@ -342,7 +343,9 @@ bool averActive = false;
 #define VD8 301
 #define VD9 302
 
-
+/*
+Struct definition for a neuron object
+*/
 struct neuron {
    int cellID;										//the assigned ID for the cell
    int threshold;									//the activation threshold of the cell
@@ -353,12 +356,15 @@ struct neuron {
    bool cellOutput;									//holds the output value for the cell as determined by connectome object
 };
 
+/*
+Struct definition for a connectome object
+*/
 struct connectome {
     neuron cellularMatrix[neuronCount];
     bool outputs[neuronCount];
 };
 
-connectome c;
+connectome c;   //constructs a connectome object
 
 
 /*
@@ -419,6 +425,9 @@ void updateOutputArray(int cellID, bool outputVal) {
     c.cellularMatrix[cellID].cellOutput = outputVal;
 }
 
+/*
+Function to calculate a random weight between -.01 and .01
+*/
 float calculateRandomWeight() {
     int adjustmentConst = 100;
 
@@ -437,7 +446,10 @@ float calculateRandomWeight() {
     }
 }
 
-void neuronToString(neuron n) {           //function to convert a neuron to a string in the data file
+/*
+Function to convert a neuron to a string in the data file in order to save information
+*/
+void neuronToString(neuron n) {
     stringstream cellIDStr;
     cellIDStr << n.cellID;
 
@@ -475,6 +487,9 @@ void neuronToString(neuron n) {           //function to convert a neuron to a st
     matrixFile << ',' << endl;
 }
 
+/*
+Function to convert a string from input file into a neuron object to read in information
+*/
 neuron stringToNeuron(int id) {
     ifstream matrixFile;
 
@@ -564,29 +579,14 @@ neuron stringToNeuron(int id) {
     return x;
 }
 
-void hebbian(int preID, int postID) {
-//Hebb's Rule: Wdelta = n*X*Y
-//where Wdelta is the change in weights, n is the learning rate, X is the presynaptic input, and Y is the postsynaptic output
-//LTD can be approximated by applying a z for a non-hebbian learning rate in place of a multiplication by x and y
-
-    int x = 0;
-    int y = 0;
+void LTD(int preID, int postID) {
     float minWeight = -1.0;
-    float maxWeight = 1.0;
-    float n = .1;
-    float z = .1;
+    float z = 0.05; //.75
 
     for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
         if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
             for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
                 if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
-                    if (c.cellularMatrix[preID].cellOutput) x = 1;
-                    if (c.cellularMatrix[i].cellOutput) y = 1;
-
-                    if (c.cellularMatrix[preID].cellOutput && c.cellularMatrix[postID].cellOutput) {
-                        if (c.cellularMatrix[i].weights[j] <= maxWeight) c.cellularMatrix[i].weights[j] += (x*y*n);
-                    }
-
                     if (!c.cellularMatrix[preID].cellOutput && !c.cellularMatrix[postID].cellOutput){
                         if (c.cellularMatrix[i].weights[j] >= minWeight) c.cellularMatrix[i].weights[j] -= z;
                     }
@@ -596,6 +596,41 @@ void hebbian(int preID, int postID) {
     }
 }
 
+/*
+Function to do hebbian learning with a given connection
+*/
+void hebbian(int preID, int postID) {
+//Hebb's Rule: Wdelta = n*X*Y
+//where Wdelta is the change in weights, n is the learning rate, X is the presynaptic input rate, and Y is the postsynaptic output rate
+//LTD can be approximated by applying a z for a non-hebbian learning rate in place of a multiplication by x and y
+
+    int x = 0;
+    int y = 0;
+    float maxWeight = 1.0;
+    float n = 1.0;  //.05
+
+    x = (firingRates[preID][0] + firingRates[preID][1] + firingRates[preID][2]) / 3;
+    y = (firingRates[postID][0] + firingRates[postID][1] + firingRates[postID][2]) / 3;
+
+
+
+    for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
+        if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
+            for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
+                if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
+
+                    if (c.cellularMatrix[preID].cellOutput && c.cellularMatrix[postID].cellOutput) {
+                        if (c.cellularMatrix[i].weights[j] <= maxWeight) c.cellularMatrix[i].weights[j] += (x*y*n);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/*
+Array that reads in neuron info from an input file
+*/
 neuron neuralList[] = {
     stringToNeuron(1),
     stringToNeuron(2),

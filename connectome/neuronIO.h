@@ -1,5 +1,6 @@
 #include "connectome.h"
 
+//list of neurons involved in each sensory process put in array form
 neuron noseTouch[4] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[114], c.cellularMatrix[115]}; //AIML, AIMR --> ASHL, ASHR, FLPL, FLPR, OLQ???
 neuron lightAvoidance[8] = {c.cellularMatrix[44], c.cellularMatrix[45], c.cellularMatrix[48], c.cellularMatrix[49], c.cellularMatrix[75], c.cellularMatrix[76], c.cellularMatrix[50], c.cellularMatrix[51]};
 neuron gentleTouchForward[2] = {c.cellularMatrix[168], c.cellularMatrix[169]};
@@ -18,10 +19,17 @@ neuron chemoattraciton[2] = {c.cellularMatrix[40], c.cellularMatrix[41]}; //ASEL
 //AVDL - backward from head touch
 //AVDR - backward from head touch
 
+
+/*
+Array to hold the command interneurons used as output info
+*/
 neuron commandInterneurons[commandInterneuronSize] = {
     c.cellularMatrix[56], c.cellularMatrix[57], c.cellularMatrix[173], c.cellularMatrix[174], c.cellularMatrix[54], c.cellularMatrix[55], c.cellularMatrix[58], c.cellularMatrix[59]
 };
 
+/*
+Function to tune weights using a VERY rough abstraction of neuroglia's genetic effect on a network, in this case based on its outputs
+*/
 void glialWeightTuning() {
     bool useGlia = false;
     float glialFactor = .05;
@@ -106,6 +114,9 @@ void glialWeightTuning() {
     }
 }
 
+/*
+Function to get the state of each command interneuron for the motor output
+*/
 bool getMotorCellState(int cellID) {
 	bool cmdInterneuronActivations[commandInterneuronSize] = {};
 
@@ -120,6 +131,9 @@ bool getMotorCellState(int cellID) {
 	return cmdInterneuronActivations[cellID];
 }
 
+/*
+Function to activate nose touch sense
+*/
 void doNoseTouch() {
 	for (int i = 0; i < noseTouchSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -134,6 +148,9 @@ void doNoseTouch() {
     }
 }
 
+/*
+Function to activate light avoidance sense
+*/
 void doLightAvoidance() {
 	for (int i = 0; i < lightAvoidanceSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -148,6 +165,9 @@ void doLightAvoidance() {
 	}
 }
 
+/*
+Function to activate gentle forward provoking touch sense
+*/
 void doGentleForwardTouch() {
 	for (int i = 0; i < gentleTouchForwardSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -161,6 +181,9 @@ void doGentleForwardTouch() {
 	}
 }
 
+/*
+Function to activate gentle backward provoking touch sense
+*/
 void doGentleBackwardTouch() {
     for (int i = 0; i < gentleTouchBackwardSize; i++) {
         for (int j = 0; j < neuronCount; j++) {
@@ -174,6 +197,9 @@ void doGentleBackwardTouch() {
     }
 }
 
+/*
+Function to activate harsh touch sense
+*/
 void doHarshTouch() {
 	for (int i = 0; i < harshTouchSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -187,6 +213,9 @@ void doHarshTouch() {
 	}
 }
 
+/*
+Function to activate thermotaxis sense
+*/
 void doThermotaxis() {
 	for (int i = 0; i < thermotaxisSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -200,6 +229,9 @@ void doThermotaxis() {
     }
 }
 
+/*
+Function to activate chemorepulsive sense
+*/
 void doChemorepulsion() {
 	for (int i = 0; i < chemorepulsionSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -213,6 +245,9 @@ void doChemorepulsion() {
 	}
 }
 
+/*
+Functino to activate chemoattractive sense
+*/
 void doChemoattraction() {
 	for (int i = 0; i < chemoattractionSize; i++) {
 		for (int j = 0; j < neuronCount; j++) {
@@ -226,6 +261,9 @@ void doChemoattraction() {
 	}
 }
 
+/*
+Function to read in sensor data from a file to be used by connectome to activate corresponding sensory neurons
+*/
 void getSensoryInputs() {
     ifstream sensoryIOfile;
 
