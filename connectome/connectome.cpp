@@ -1,5 +1,5 @@
-//TODO: try new dataset with sign for synapses and proper weights for inputs based on synapses
-//TODO: implement some form of synaptic competition in hebbian function? Limited hebbian resources and most frequent fires get it?
+//TODO: verify that the neurons in the sensory arrays are correct, as behavior is a little funky
+//TODO: tune the network
 //TODO: decide if we can salvage the idea of a "glial function" that supervises weights or if we should save it for the FPGA project version
 //TODO: add arduino/pi compatability! allow program to interface with wormybots for demonstrations
 //TODO: build new wormybot to house my personal ANN model... add an LCD face? Questions, questions...
@@ -219,7 +219,7 @@ bool activationFunction (int cellID) {          	                    //activatio
 Function for doing hebbian learning with each applicable neuron in the network
 */
 void doLearning() {
-    int hebbianCap = 100;   //variable to hold competitive maximum value for hebbian learning adjustments
+    int hebbianCap = 50;   //variable to hold competitive maximum value for hebbian learning adjustments
     float rateSums[neuronCount] = {};   //variable to hold the sums of the firing rates for each neuron
     int maxRateIDs[hebbianCap] = {};            //declare array of IDs of neurons with highest rates
 
@@ -240,15 +240,23 @@ void doLearning() {
     }
 
     for (int i = 0; i < neuronCount; i++) {     //iterate over all neurons in the connectome
+        bool maxRateHasI = false;
+
         for (int k = 0; k < hebbianCap; k++) {  //iterate over the array of max rates
             if (maxRateIDs[k] == i) {           //check to see if maxRateIDs contains the current neuron
+                maxRateHasI = true;
+
                 for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {  //iterate over all inputs in the current neuron
+                    //cout << "Do Hebbian with cell ID: " << i << endl;
                     hebbian(c.cellularMatrix[i].inputs[j], i);              //do hebbian learning with it
                 }
-            } else {
-                for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {  //iterate over all inputs in the current neuron
-                    LTD(c.cellularMatrix[i].inputs[j], i);                 //otherwise just do LTD
-                }
+            }
+        }
+
+        if (!maxRateHasI) {
+            for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {  //iterate over all inputs in the current neuron
+                //cout << "Do LTD with cell ID: " << i << endl;
+                LTD(c.cellularMatrix[i].inputs[j], i);                 //otherwise just do LTD
             }
         }
     }
@@ -291,6 +299,8 @@ void connectomeInit() {
     for (int i = 0; i <= neuronCount; i++) {    //for every neuron in the network
         c.cellularMatrix[i] = neuralList[i];    //load the neuron from a file into the matrix of the connectome
 
+        c.cellularMatrix[i].cellOutput = false;
+
         for (int j = 0; j < 3; j++) {           //loop over every iteration in the firing rate matrix
             firingRates[i][j] = 0;              //initialize it with all zeroes
         }
@@ -312,8 +322,10 @@ int main() {
 
         doLearning();                           //run hebbian algorithm
 
-        setNextState();                         //calculate next state of the connectome
+        setNextState();
         //saveNewState();                         //save the state of the connectome
+
+        //glialWeightTuning();
     }
 
     return 0;

@@ -32,7 +32,7 @@ Function to tune weights using a VERY rough abstraction of neuroglia's genetic e
 */
 void glialWeightTuning() {
     bool useGlia = false;
-    float glialFactor = .05;
+    float glialFactor = .9;
 
     /*
     THREE USE-CASES OF THIS FUNCTION

@@ -16,7 +16,7 @@ const int harshTouchSize = 4;
 const int thermotaxisSize = 8;
 const int chemorepulsionSize = 8;
 const int chemoattractionSize = 6;
-const float threshold = 1.0;
+const float threshold = 10;
 
 bool noseTouchActive = false;    //input check variables
 bool lightAvoidanceActive = false;
@@ -433,8 +433,9 @@ float calculateRandomWeight() {
 
     srand (static_cast <unsigned> (time(0)));
 
+    //float randomWeight = (((float) rand()) / (float) RAND_MAX);
     float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-    randomWeight = round (randomWeight * adjustmentConst) / (adjustmentConst * 10);
+    //randomWeight = round (randomWeight * adjustmentConst) / (adjustmentConst * 10);
 
     int r = rand();
     bool isPos = r % 2;
@@ -580,8 +581,8 @@ neuron stringToNeuron(int id) {
 }
 
 void LTD(int preID, int postID) {
-    float minWeight = -1.0;
-    float z = 0.05; //.75
+    float minWeight = -71.0; //-1.0
+    float z = 7;
 
     for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
         if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
@@ -606,8 +607,8 @@ void hebbian(int preID, int postID) {
 
     int x = 0;
     int y = 0;
-    float maxWeight = 1.0;
-    float n = 1.0;  //.05
+    float maxWeight = 71.0; //1.0
+    float n = 20;
 
     x = (firingRates[preID][0] + firingRates[preID][1] + firingRates[preID][2]) / 3;
     y = (firingRates[postID][0] + firingRates[postID][1] + firingRates[postID][2]) / 3;
