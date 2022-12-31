@@ -18,6 +18,8 @@ PROJECT CREDITS
 #include <string>
 #include <algorithm>
 #include <cstdlib>
+#include <windows.h>
+#include <unistd.h>
 #include "neuronIO.h"
 
 
@@ -25,8 +27,8 @@ PROJECT CREDITS
 Function to print the entire connectome's cellular matrix to the terminal
 */
 void printCellularMatrix() {
-    int width = 17;
-    int height = 18;
+    int width = matrixWidth; //17
+    int height = matrixHeight; //18
     int neuronCounter = 1;
 
         for (int i = 0; i < height; i++) {
@@ -315,10 +317,14 @@ int main() {
     bool activated = true;                      //declare a boolean to set connectome as 'on'
 
     while (activated) {                         //while it's true run the connectome
+        system("cls");
+
         getSensoryInputs();                     //get updated sensory information from a file
 
         printCellularMatrix();                  //print the connectome out
         printMotorMatrix();                     //print the motor cell matrix out
+
+        sleep(1);
 
         doLearning();                           //run hebbian algorithm
 

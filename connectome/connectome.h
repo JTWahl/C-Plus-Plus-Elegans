@@ -7,6 +7,8 @@ ofstream matrixFile;    //sets up an output stream object
 
 const static int neuronCount = 302; //constants used by network
 const int maxSynapse = 500;
+const int matrixHeight = 17;
+const int matrixWidth = 18;
 const int commandInterneuronSize = 8;
 const int noseTouchSize = 2;
 const int lightAvoidanceSize = 8;
@@ -16,7 +18,7 @@ const int harshTouchSize = 4;
 const int thermotaxisSize = 8;
 const int chemorepulsionSize = 8;
 const int chemoattractionSize = 6;
-const float threshold = 10;
+const float threshold = 1; //5
 
 bool noseTouchActive = false;    //input check variables
 bool lightAvoidanceActive = false;
@@ -429,7 +431,7 @@ void updateOutputArray(int cellID, bool outputVal) {
 Function to calculate a random weight between -.01 and .01
 */
 float calculateRandomWeight() {
-    int adjustmentConst = 100;
+    //int adjustmentConst = 100;
 
     srand (static_cast <unsigned> (time(0)));
 
@@ -582,7 +584,7 @@ neuron stringToNeuron(int id) {
 
 void LTD(int preID, int postID) {
     float minWeight = -71.0; //-1.0
-    float z = 7;
+    float z = 10;
 
     for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
         if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
