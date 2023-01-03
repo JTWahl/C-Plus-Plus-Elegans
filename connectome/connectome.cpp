@@ -1,7 +1,6 @@
-//TODO: verify that the neurons in the sensory arrays are correct, as behavior is a little funky
-//TODO: tune the network
-//TODO: decide if we can salvage the idea of a "glial function" that supervises weights or if we should save it for the FPGA project version
-//TODO: add arduino/pi compatability! allow program to interface with wormybots for demonstrations
+//TODO: decide if we're gonna use glia or if we need to edit
+//TODO: tune learning variables to produce optimal output
+//TODO: add sense for gustatory salt sensing neurons
 //TODO: build new wormybot to house my personal ANN model... add an LCD face? Questions, questions...
 
 /*
@@ -13,15 +12,7 @@ PROJECT CREDITS
 
 */
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include <cstdlib>
-#include <windows.h>
-#include <unistd.h>
 #include "neuronIO.h"
-
 
 /*
 Function to print the entire connectome's cellular matrix to the terminal
@@ -29,7 +20,7 @@ Function to print the entire connectome's cellular matrix to the terminal
 void printCellularMatrix() {
     int width = matrixWidth; //17
     int height = matrixHeight; //18
-    int neuronCounter = 1;
+    int neuronCounter = 0;
 
         for (int i = 0; i < height; i++) {
             for (int k = 0; k < width; k++) {
@@ -55,11 +46,101 @@ void printCellularMatrix() {
 /*
 Function to print a labeled array of the motor matrix
 */
-void printMotorMatrix() {
-    ofstream motorIOfile;
-    motorIOfile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt", ios::out);
+void printMotorRatios() {
+    int VAcount = 12;
+    int VBcount = 11;
+    int DAcount = 9;
+    int DBcount = 7;
+    int VAsum = 0;
+    int VBsum = 0;
+    int DAsum = 0;
+    int DBsum = 0;
 
-    for (int i = 0; i < commandInterneuronSize; i++) {
+    //backward ventral locomotion motor neurons
+    int motorNeuronAVentral[VAcount] = {
+      VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8, VA9, VA10, VA11, VA12
+    };
+
+    //forward ventral locomotion motor neurons
+    int motorNeuronBVentral[VBcount] = {
+      VB1, VB2, VB3, VB4, VB5, VB6, VB7, VB8, VB9, VB10, VB11
+    };
+
+    //backward dorsal locomotion motor neurons
+    int motorNeuronADorsal[DAcount] = {
+      DA1, DA2, DA3, DA4, DA5, DA6, DA7, DA8, DA9
+    };
+
+    //forward dorsal locomotion motor neurons
+    int motorNeuronBDorsal[DBcount] = {
+      DB1, DB2, DB3, DB4, DB5, DB6, DB7
+    };
+
+
+    for (int i = 0; i < VAcount; i++) {
+        if (c.cellularMatrix[motorNeuronAVentral[i] - 1].cellOutput) {
+            VAsum++;
+        }
+    }
+
+    for (int i = 0; i < VBcount; i++) {
+        if (c.cellularMatrix[motorNeuronBVentral[i] - 1].cellOutput) {
+            VBsum++;
+        }
+    }
+
+    for (int i = 0; i < DAcount; i++) {
+        if (c.cellularMatrix[motorNeuronADorsal[i] - 1].cellOutput) {
+            DAsum++;
+        }
+    }
+
+    for (int i = 0; i < DBcount; i++) {
+        if (c.cellularMatrix[motorNeuronBDorsal[i] - 1].cellOutput) {
+            DBsum++;
+        }
+    }
+
+
+    float vaRatio = float(VAsum)/float(VAcount);
+    float vbRatio = float(VBsum)/float(VBcount);
+    float daRatio = float(DAsum)/float(DAcount);
+    float dbRatio = float(DBsum)/float(DBcount);
+
+    cout << "VA Ratio: " << vaRatio << endl;
+    cout << "VB Ratio: " << vbRatio << endl;
+    cout << "DA Ratio: " << daRatio << endl;
+    cout << "DB Ratio: " << dbRatio << endl;
+    cout << '\n';
+
+    if (vaRatio + daRatio > vbRatio + dbRatio) {
+        cout << "BACKWARD - ";
+    } else {
+        cout << "FORWARD - ";
+    }
+
+/*    if (vaRatio + vbRatio > daRatio + dbRatio) {
+        cout << "LEFT/VENTRAL" << endl;
+        cout << '\n';
+    } else {
+        cout << "RIGHT/DORSAL" << endl;
+        cout << '\n';
+    }*/
+
+    ofstream motorIOfile;
+    motorIOfile.open(motorFileLocation, ios::out);
+    motorIOfile << vaRatio << '\n';
+    motorIOfile << vbRatio << '\n';
+    motorIOfile << daRatio << '\n';
+    motorIOfile << dbRatio << '\n';
+    motorIOfile.close();
+}
+
+/*
+Function to print out command interneuron data to terminal
+*/
+void printCmdInterneurons() {
+      for (int i = 0; i < commandInterneuronSize; i++) {
                 //AVBL
         if (i == 0) {
             bool cellOutput = false;
@@ -67,10 +148,8 @@ void printMotorMatrix() {
 
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //AVBR
@@ -80,10 +159,8 @@ void printMotorMatrix() {
 
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //PVCL
@@ -92,10 +169,8 @@ void printMotorMatrix() {
             cellOutput = getCellOutputFromMatrix(173);
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //PVCR
@@ -104,10 +179,8 @@ void printMotorMatrix() {
             cellOutput = getCellOutputFromMatrix(174);
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //AVAL
@@ -116,10 +189,8 @@ void printMotorMatrix() {
             cellOutput = getCellOutputFromMatrix(54);
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //AVAR
@@ -128,10 +199,8 @@ void printMotorMatrix() {
             cellOutput = getCellOutputFromMatrix(55);
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //AVDL
@@ -140,10 +209,8 @@ void printMotorMatrix() {
             cellOutput = getCellOutputFromMatrix(58);
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
                 //AVDR
@@ -152,15 +219,11 @@ void printMotorMatrix() {
             cellOutput = getCellOutputFromMatrix(59);
             if (cellOutput) {
                 cout << " [1]  ";
-                motorIOfile << "1" << '\n';
             } else {
                 cout << " [0]  ";
-                motorIOfile << "0" << '\n';
             }
         }
     }
-
-    motorIOfile.close();
 
     cout << '\n';
     cout << " AVBL " << " AVBR " << " PVCL " << " PVCR " << " AVAL " << " AVAR " << " AVDL " << " AVDR " << endl;
@@ -221,7 +284,7 @@ bool activationFunction (int cellID) {          	                    //activatio
 Function for doing hebbian learning with each applicable neuron in the network
 */
 void doLearning() {
-    int hebbianCap = 50;   //variable to hold competitive maximum value for hebbian learning adjustments
+    int hebbianCap = hebbianMax;   //variable to hold competitive maximum value for hebbian learning adjustments
     float rateSums[neuronCount] = {};   //variable to hold the sums of the firing rates for each neuron
     int maxRateIDs[hebbianCap] = {};            //declare array of IDs of neurons with highest rates
 
@@ -285,7 +348,7 @@ void setNextState() {                  			        //function to update values in
 Function to save the current state of the connectomes cellular matrix to the matrix file.
 */
 void saveNewState() {
-    matrixFile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt");      //open the file
+    matrixFile.open(matrixLocation);      //open the file
 
     for (int i = 0; i < neuronCount; i++) {
         neuronToString(c.cellularMatrix[i]);
@@ -307,6 +370,17 @@ void connectomeInit() {
             firingRates[i][j] = 0;              //initialize it with all zeroes
         }
     }
+
+    for (int i = 0; i < neuronCount; i++) {
+        for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
+            //float weightRaw = c.cellularMatrix[i].weights[j];
+            //float weightOffset = .17;
+
+            //c.cellularMatrix[i].weights[j] = (pow(weightRaw, (1/3))/3) + weightOffset;
+            c.cellularMatrix[i].inputs[j] = c.cellularMatrix[i].inputs[j] - 1;
+            c.cellularMatrix[i].weights[j] /= 5;
+        }
+    }
 }
 
 /*
@@ -314,25 +388,26 @@ Main function that runs connectome in a loop
 */
 int main() {
     connectomeInit();                           //initialize connectome
-    bool activated = true;                      //declare a boolean to set connectome as 'on'
 
-    while (activated) {                         //while it's true run the connectome
+    while (true) {
         system("cls");
 
         getSensoryInputs();                     //get updated sensory information from a file
 
-        printCellularMatrix();                  //print the connectome out
-        printMotorMatrix();                     //print the motor cell matrix out
+        printCellularMatrix();                  //print the whole connectome out
+        printMotorRatios();                     //print the motor cells out
+        printCmdInterneurons();                 //print out the command interneurons
 
         sleep(1);
 
-        doLearning();                           //run hebbian algorithm
-
         setNextState();
+        doLearning();                           //run hebbian algorithm
         //saveNewState();                         //save the state of the connectome
-
-        //glialWeightTuning();
+        glialWeightTuning();
     }
+
+        //while (diagnosticTool());                        //while it's true run the connectome
+        //adjustTuningVars();
 
     return 0;
 }

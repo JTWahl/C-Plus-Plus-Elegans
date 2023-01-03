@@ -1,5 +1,13 @@
 #include <sstream>
 #include <ctime>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <cstdlib>
+#include <windows.h>
+#include <unistd.h>
+#include <cmath>
 
 using namespace std;
 
@@ -10,14 +18,6 @@ const int maxSynapse = 500;
 const int matrixHeight = 17;
 const int matrixWidth = 18;
 const int commandInterneuronSize = 8;
-const int noseTouchSize = 2;
-const int lightAvoidanceSize = 8;
-const int gentleTouchForwardSize = 2;
-const int gentleTouchBackwardSize = 3;
-const int harshTouchSize = 4;
-const int thermotaxisSize = 8;
-const int chemorepulsionSize = 8;
-const int chemoattractionSize = 6;
 const float threshold = 1; //5
 
 bool noseTouchActive = false;    //input check variables
@@ -41,6 +41,26 @@ bool avelActive = false;
 bool averActive = false;
 
 int firingRates[neuronCount][3] = {};   //makes an array to hold output firing data
+
+int diagnosticCellID = 0;       //global variables for the diagnostic tool
+int diagnosticOutputID = 0;
+int diagnosticWeightList[neuronCount] = {};
+float diagnosticOutputList[neuronCount] = {};
+bool beginDiagnostic = true;
+
+int hebbianMax = 25; //220
+float hebbianFactor = .1; //.45
+float LTDfactor = .5; //.7
+
+//280, .1, .5 without glia is pretty good, but still not quite activated enough
+//same with 50, .5, .5, okay but not active enough...
+//50, .75, 0 with glia tuning seems optimal, except that command interneurons regress to 0 output over time
+//same with 50, .75, .5, great, but output neurons regress to zero over time
+
+string motorFileLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
+string sensoryLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
+string matrixLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
+
 
 #define ADAL 1  //list of all neuron names defined by their ID number for ease of use
 #define ADAR 2
@@ -428,19 +448,18 @@ void updateOutputArray(int cellID, bool outputVal) {
 }
 
 /*
-Function to calculate a random weight between -.01 and .01
+Function to calculate a random weight between -1 and 1
 */
 float calculateRandomWeight() {
     //int adjustmentConst = 100;
 
     srand (static_cast <unsigned> (time(0)));
 
-    //float randomWeight = (((float) rand()) / (float) RAND_MAX);
-    float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    float randomWeight = (((float) rand()) / (float) RAND_MAX);
+    //float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     //randomWeight = round (randomWeight * adjustmentConst) / (adjustmentConst * 10);
 
-    int r = rand();
-    bool isPos = r % 2;
+    bool isPos = rand() % 2;
 
     if (isPos) {
         return randomWeight;
@@ -518,7 +537,7 @@ neuron stringToNeuron(int id) {
     string cellOutputStr;
     string data = "";
 
-    matrixFile.open("C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt");
+    matrixFile.open(matrixLocation);
 
     for (int j = 1; j <= id; j++) {
         if (getline(matrixFile, data, '\n')) cellIDStr = data;
@@ -583,8 +602,8 @@ neuron stringToNeuron(int id) {
 }
 
 void LTD(int preID, int postID) {
-    float minWeight = -71.0; //-1.0
-    float z = 10;
+    float minWeight = -2.0;
+    float z = LTDfactor;
 
     for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
         if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
@@ -609,8 +628,8 @@ void hebbian(int preID, int postID) {
 
     int x = 0;
     int y = 0;
-    float maxWeight = 71.0; //1.0
-    float n = 20;
+    float maxWeight = 1.0;
+    float n = hebbianFactor;
 
     x = (firingRates[preID][0] + firingRates[preID][1] + firingRates[preID][2]) / 3;
     y = (firingRates[postID][0] + firingRates[postID][1] + firingRates[postID][2]) / 3;
