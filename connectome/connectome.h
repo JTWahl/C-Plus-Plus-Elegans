@@ -1,3 +1,4 @@
+#include "neurons.h"
 #include <sstream>
 #include <ctime>
 #include <string>
@@ -13,13 +14,6 @@ using namespace std;
 
 ofstream matrixFile;    //sets up an output stream object
 
-const static int neuronCount = 302; //constants used by network
-const int maxSynapse = 500;
-const int matrixHeight = 17;
-const int matrixWidth = 18;
-const int commandInterneuronSize = 8;
-const float threshold = 1; //5
-
 bool noseTouchActive = false;    //input check variables
 bool lightAvoidanceActive = false;
 bool gentleTouchForwardActive = false;
@@ -27,628 +21,54 @@ bool gentleTouchBackwardActive = false;
 bool harshTouchActive = false;
 bool thermotaxisActive = false;
 bool chemorepulsionActive = false;
-bool chemoattractionActive = false;
-
-bool avblActive = false;        //output check variables
-bool avbrActive = false;
-bool pvclActive = false;
-bool pvcrActive = false;
-bool avalActive = false;
-bool avarActive = false;
-bool avdlActive = false;
-bool avdrActive = false;
-bool avelActive = false;
-bool averActive = false;
+bool saltSensingActive = false;
+bool basalForagingActive = false;
 
 int firingRates[neuronCount][3] = {};   //makes an array to hold output firing data
-
-int diagnosticCellID = 0;       //global variables for the diagnostic tool
+int diagnosticCellID = 0;               //global variables for the diagnostic tool
 int diagnosticOutputID = 0;
 int diagnosticWeightList[neuronCount] = {};
 float diagnosticOutputList[neuronCount] = {};
 bool beginDiagnostic = true;
 
-int hebbianMax = 25; //220
-float hebbianFactor = .1; //.45
-float LTDfactor = .5; //.7
+int hebbianMax = 220;                   //adjustable learning attributes
+float hebbianFactor = .75;                  //220, .75, .25 works well
+float LTDfactor = .25;
 
-//280, .1, .5 without glia is pretty good, but still not quite activated enough
-//same with 50, .5, .5, okay but not active enough...
-//50, .75, 0 with glia tuning seems optimal, except that command interneurons regress to 0 output over time
-//same with 50, .75, .5, great, but output neurons regress to zero over time
+    //280, .1, .5 without glia is pretty good, but still not quite activated enough
+        //same with 50, .5, .5, okay but not active enough...
+    //50, .75, 0 with glia tuning seems optimal, except that command interneurons regress to 0 output over time
+        //same with 50, .75, .5, great, but output neurons regress to zero over time
+
 
 string motorFileLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
 string sensoryLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
 string matrixLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
 
-
-#define ADAL 1  //list of all neuron names defined by their ID number for ease of use
-#define ADAR 2
-#define ADEL 3
-#define ADER 4
-#define ADFL 5
-#define ADFR 6
-#define ADLL 7
-#define ADLR 8
-#define AFDL 9
-#define AFDR 10
-#define AIAL 11
-#define AIAR 12
-#define AIBL 13
-#define AIBR 14
-#define AIML 15
-#define AIMR 16
-#define AINL 17
-#define AINR 18
-#define AIYL 19
-#define AIYR 20
-#define AIZL 21
-#define AIZR 22
-#define ALA 23
-#define ALML 24
-#define ALMR 25
-#define ALNL 26
-#define ALNR 27
-#define AQR 28
-#define AS1 29
-#define AS10 30
-#define AS11 31
-#define AS2 32
-#define AS3 33
-#define AS4 34
-#define AS5 35
-#define AS6 36
-#define AS7 37
-#define AS8 38
-#define AS9 39
-#define ASEL 40
-#define ASER 41
-#define ASGL 42
-#define ASGR 43
-#define ASHL 44
-#define ASHR 45
-#define ASIL 46
-#define ASIR 47
-#define ASJL 48
-#define ASJR 49
-#define ASKL 50
-#define ASKR 51
-#define AUAL 52
-#define AUAR 53
-#define AVAL 54
-#define AVAR 55
-#define AVBL 56
-#define AVBR 57
-#define AVDL 58
-#define AVDR 59
-#define AVEL 60
-#define AVER 61
-#define AVFL 62
-#define AVFR 63
-#define AVG 64
-#define AVHL 65
-#define AVHR 66
-#define AVJL 67
-#define AVJR 68
-#define AVKL 69
-#define AVKR 70
-#define AVL 71
-#define AVM 72
-#define AWAL 73
-#define AWAR 74
-#define AWBL 75
-#define AWBR 76
-#define AWCL 77
-#define AWCR 78
-#define BAGL 79
-#define BAGR 80
-#define BDUL 81
-#define BDUR 82
-#define CANL 83
-#define CANR 84
-#define CEPDL 85
-#define CEPDR 86
-#define CEPVL 87
-#define CEPVR 88
-#define DA1 89
-#define DA2 90
-#define DA3 91
-#define DA4 92
-#define DA5 93
-#define DA6 94
-#define DA7 95
-#define DA8 96
-#define DA9 97
-#define DB1 98
-#define DB2 99
-#define DB3 100
-#define DB4 101
-#define DB5 102
-#define DB6 103
-#define DB7 104
-#define DD1 105
-#define DD2 106
-#define DD3 107
-#define DD4 108
-#define DD5 109
-#define DD6 110
-#define DVA 111
-#define DVB 112
-#define DVC 113
-#define FLPL 114
-#define FLPR 115
-#define HSNL 116
-#define HSNR 117
-#define I1L 118
-#define I1R 119
-#define I2L 120
-#define I2R 121
-#define I3 122
-#define I4 123
-#define I5 124
-#define I6 125
-#define IL1DL 126
-#define IL1DR 127
-#define IL1L 128
-#define IL1R 129
-#define IL1VL 130
-#define IL1VR 131
-#define IL2DL 132
-#define IL2DR 133
-#define IL2L 134
-#define IL2R 135
-#define IL2VL 136
-#define IL2VR 137
-#define LUAL 138
-#define LUAR 139
-#define M1 140
-#define M2L 141
-#define M2R 142
-#define M3L 143
-#define M3R 144
-#define M4 145
-#define M5 146
-#define MCL 147
-#define MCR 148
-#define MI 149
-#define NSML 150
-#define NSMR 151
-#define OLLL 152
-#define OLLR 153
-#define OLQDL 154
-#define OLQDR 155
-#define OLQVL 156
-#define OLQVR 157
-#define PDA 158
-#define PDB 159
-#define PDEL 160
-#define PDER 161
-#define PHAL 162
-#define PHAR 163
-#define PHBL 164
-#define PHBR 165
-#define PHCL 166
-#define PHCR 167
-#define PLML 168
-#define PLMR 169
-#define PLNL 170
-#define PLNR 171
-#define PQR 172
-#define PVCL 173
-#define PVCR 174
-#define PVDL 175
-#define PVDR 176
-#define PVM 177
-#define PVNL 178
-#define PVNR 179
-#define PVPL 180
-#define PVPR 181
-#define PVQL 182
-#define PVQR 183
-#define PVR 184
-#define PVT 185
-#define PVWL 186
-#define PVWR 187
-#define RIAL 188
-#define RIAR 189
-#define RIBL 190
-#define RIBR 191
-#define RICL 192
-#define RICR 193
-#define RID 194
-#define RIFL 195
-#define RIFR 196
-#define RIGL 197
-#define RIGR 198
-#define RIH 199
-#define RIML 200
-#define RIMR 201
-#define RIPL 202
-#define RIPR 203
-#define RIR 204
-#define RIS 205
-#define RIVL 206
-#define RIVR 207
-#define RMDDL 208
-#define RMDDR 209
-#define RMDL 210
-#define RMDR 211
-#define RMDVL 212
-#define RMDVR 213
-#define RMED 214
-#define RMEL 215
-#define RMER 216
-#define RMEV 217
-#define RMFL 218
-#define RMFR 219
-#define RMGL 220
-#define RMGR 221
-#define RMHL 222
-#define RMHR 223
-#define SAADL 224
-#define SAADR 225
-#define SAAVL 226
-#define SAAVR 227
-#define SABD 228
-#define SABVL 229
-#define SABVR 230
-#define SDQL 231
-#define SDQR 232
-#define SIADL 233
-#define SIADR 234
-#define SIAVL 235
-#define SIAVR 236
-#define SIBDL 237
-#define SIBDR 238
-#define SIBVL 239
-#define SIBVR 240
-#define SMBDL 241
-#define SMBDR 242
-#define SMBVL 243
-#define SMBVR 244
-#define SMDDL 245
-#define SMDDR 246
-#define SMDVL 247
-#define SMDVR 248
-#define URADL 249
-#define URADR 250
-#define URAVL 251
-#define URAVR 252
-#define URBL 253
-#define URBR 254
-#define URXL 255
-#define URXR 256
-#define URYDL 257
-#define URYDR 258
-#define URYVL 259
-#define URYVR 260
-#define VA1 261
-#define VA10 262
-#define VA11 263
-#define VA12 264
-#define VA2 265
-#define VA3 266
-#define VA4 267
-#define VA5 268
-#define VA6 269
-#define VA7 270
-#define VA8 271
-#define VA9 272
-#define VB1 273
-#define VB10 274
-#define VB11 275
-#define VB2 276
-#define VB3 277
-#define VB4 278
-#define VB5 279
-#define VB6 280
-#define VB7 281
-#define VB8 282
-#define VB9 283
-#define VC1 284
-#define VC2 285
-#define VC3 286
-#define VC4 287
-#define VC5 288
-#define VC6 289
-#define VD1 290
-#define VD10 291
-#define VD11 292
-#define VD12 293
-#define VD13 294
-#define VD2 295
-#define VD3 296
-#define VD4 297
-#define VD5 298
-#define VD6 299
-#define VD7 300
-#define VD8 301
-#define VD9 302
-
-/*
-Struct definition for a neuron object
-*/
-struct neuron {
-   int cellID;										//the assigned ID for the cell
-   int threshold;									//the activation threshold of the cell
-   int inputs[maxSynapse];				//list of IDs of the connected pre-synaptic neurons to the current neuron
-   int inputsLen;									//length of a neuron's inputs array
-   float weights[maxSynapse];				//list of weights for every pre-synaptic input for the given neuron
-   int weightsLen;									//length of a neuron's weights array
-   bool cellOutput;									//holds the output value for the cell as determined by connectome object
-};
-
 /*
 Struct definition for a connectome object
 */
-struct connectome {
-    neuron cellularMatrix[neuronCount];
-    bool outputs[neuronCount];
-};
+struct connectome;
 
-connectome c;   //constructs a connectome object
+//connectome c;   //constructs a connectome object
 
-
-/*
-Getter function for the output of a given neuron in the matrix. Takes a cells ID, outputs a boolean value.
-*/
-bool getCellOutputFromMatrix(int targetID) {
-   return c.cellularMatrix[targetID].cellOutput;
-}
-
-/*
-Getter function for a given neuron in the cellular matrix. Takes a cells ID, outputs the neuron object.
-*/
-neuron getNeuronFromMatrix(int targetID) {								//function to get the neuron out of the connectome object's cellular matrix
-  return c.cellularMatrix[targetID];
-}
-
-/*
-Getter function for the threshold of a given neuron in the matrix. Takes a cells ID, outputs the integer threshold.
-*/
-int getCellThresholdFromMatrix(int targetID) {
-   return c.cellularMatrix[targetID].threshold;
-}
-
-/*
-Getter function for the length of a cells input array. Takes a cells ID, outputs an integer length.
-*/
-int getCellInputLenFromMatrix(int targetID) {
-   return c.cellularMatrix[targetID].inputsLen;
-}
-
-/*
-Getter function for the input array of a given cell. Takes a cells ID, outputs an array of the input IDs.
-*/
-int getInputFromMatrix(int neuronID, int inputID) {
-   return c.cellularMatrix[neuronID].inputs[inputID];
-}
-
-/*
-Getter function for the length of a cells weight array. Takes a cells ID, outputs an integer length.
-*/
-int getCellWeightLenFromMatrix(int targetID) {
-   return c.cellularMatrix[targetID].weightsLen;
-}
-
-/*
-Getter function for the weight array of a given cell. Takes a cells ID, outputs an array of the weight values.
-*/
-float getWeightFromMatrix(int neuronID, int weightID) {
-//    cout << "Neuron ID: " << neuronID << endl;
-//    cout << "Weight ID: " << weightID << endl;
-   return c.cellularMatrix[neuronID].weights[weightID];
-}
-
-/*
-Function to update the output arrays of neurons. Takes a cells ID and the output to be updated.
-*/
-void updateOutputArray(int cellID, bool outputVal) {
-    c.cellularMatrix[cellID].cellOutput = outputVal;
-}
-
-/*
-Function to calculate a random weight between -1 and 1
-*/
-float calculateRandomWeight() {
-    //int adjustmentConst = 100;
-
-    srand (static_cast <unsigned> (time(0)));
-
-    float randomWeight = (((float) rand()) / (float) RAND_MAX);
-    //float randomWeight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-    //randomWeight = round (randomWeight * adjustmentConst) / (adjustmentConst * 10);
-
-    bool isPos = rand() % 2;
-
-    if (isPos) {
-        return randomWeight;
-    } else {
-        return -randomWeight;
-    }
-}
-
-/*
-Function to convert a neuron to a string in the data file in order to save information
-*/
-void neuronToString(neuron n) {
-    stringstream cellIDStr;
-    cellIDStr << n.cellID;
-
-    stringstream thresholdStr;
-    thresholdStr << n.threshold;
-
-    stringstream inputLenStr;
-    inputLenStr << n.inputsLen;
-
-    stringstream weightLenStr;
-    weightLenStr << n.weightsLen;
-
-    stringstream cellOutputStr;
-    cellOutputStr << n.cellOutput;
-
-    stringstream inputsStr[n.inputsLen] = {};
-    stringstream weightsStr[n.weightsLen] = {};
-
-    for (int i = 0; i < n.inputsLen; i++) {
-        inputsStr[i] << n.inputs[i];
-        weightsStr[i] << n.weights[i];
-    }
-
-    matrixFile << cellIDStr.rdbuf() << endl;
-    matrixFile << thresholdStr.rdbuf() << endl;
-    matrixFile << inputLenStr.rdbuf() << endl;
-    for (int i = 0; i < n.inputsLen; i++) {
-        matrixFile << inputsStr[i].rdbuf() << endl;
-    }
-    matrixFile << weightLenStr.rdbuf() << endl;
-    for (int i = 0; i < n.weightsLen; i++) {
-        matrixFile << weightsStr[i].rdbuf() << endl;
-    }
-    matrixFile << cellOutputStr.rdbuf() << endl;
-    matrixFile << ',' << endl;
-}
-
-/*
-Function to convert a string from input file into a neuron object to read in information
-*/
-neuron stringToNeuron(int id) {
-    ifstream matrixFile;
-
-    neuron n;
-    neuron x;
-
-    x.cellID = 0;
-    x.threshold = 1;
-    x.inputsLen = 0;
-    x.weightsLen = 0;
-    x.inputs[0] = {};
-    x.weights[0] = {};
-    x.cellOutput = 0;
-
-    int maxSynapse = 500;
-
-    string cellIDStr;
-    string thresholdStr;
-    string inputsLenStr;
-    string inputsStr[maxSynapse];
-    string weightsLenStr;
-    string weightsStr[maxSynapse];
-    string cellOutputStr;
-    string data = "";
-
-    matrixFile.open(matrixLocation);
-
-    for (int j = 1; j <= id; j++) {
-        if (getline(matrixFile, data, '\n')) cellIDStr = data;
-        stringstream idcell (cellIDStr);
-        idcell >> n.cellID;
-        //cout << "Cell ID: " << cellIDStr << endl;
-
-        if (getline(matrixFile, data, '\n')) thresholdStr = data;
-        stringstream threshold (thresholdStr);
-        threshold >> n.threshold;
-        //cout << "Threshold: " << thresholdStr << endl;
-
-        if (getline(matrixFile, data, '\n')) inputsLenStr = data;
-        stringstream inputLen (inputsLenStr);
-        inputLen >> n.inputsLen;
-        //cout << "Input Len: " << inputsLenStr << endl;
-
-        for (int i = 0; i < n.inputsLen; i++) {
-            if (getline(matrixFile, data, '\n')) inputsStr[i] = data;
-            stringstream inputs (inputsStr[i]);
-            inputs >> n.inputs[i];
-            //cout << "Input IDs: " << inputsStr[i] << endl;
-        }
-
-        if (getline(matrixFile, data, '\n')) weightsLenStr = data;
-        stringstream weightLen (weightsLenStr);
-        weightLen >> n.weightsLen;
-        //cout << "Weight Len: " << weightsLenStr << endl;
-
-
-        for (int i = 0; i < n.weightsLen; i++) {
-            if (getline(matrixFile, data, '\n')) weightsStr[i] = data;
-            stringstream weights (weightsStr[i]);
-            weights >> n.weights[i];
-            //n.weights[i] = calculateRandomWeight();
-            //cout << "Weights: " << weightsStr[i] << endl;
-        }
-
-        if (getline(matrixFile, data, '\n')) cellOutputStr = data;
-        stringstream cellOutput (cellOutputStr);
-        cellOutput >> n.cellOutput;
-        //cout << "Output: " << cellOutputStr << endl;
-
-        if (getline(matrixFile, data, '\n')) string delim = data;
-
-        if (j == id) {
-            return n;
-        }
-    }
-
-    matrixFile.close();
-
-/*    cout << "ID: " << n.cellID << endl;
-    cout << "THRESHOLD: " << n.threshold << endl;
-    cout << "INPUT LEN: " << n.inputsLen << endl;
-    cout << "WEIGHT LEN: " << n.weightsLen << endl;
-    cout << "INPUTS: " << n.inputs << endl;
-    cout << "WEIGHTS: " << n.weights << endl;
-    cout << "OUTPUT: " << n.cellOutput << endl;
-*/
-    return x;
-}
-
-void LTD(int preID, int postID) {
-    float minWeight = -2.0;
-    float z = LTDfactor;
-
-    for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
-        if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
-            for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
-                if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
-                    if (!c.cellularMatrix[preID].cellOutput && !c.cellularMatrix[postID].cellOutput){
-                        if (c.cellularMatrix[i].weights[j] >= minWeight) c.cellularMatrix[i].weights[j] -= z;
-                    }
-                }
-            }
-        }
-    }
-}
-
-/*
-Function to do hebbian learning with a given connection
-*/
-void hebbian(int preID, int postID) {
-//Hebb's Rule: Wdelta = n*X*Y
-//where Wdelta is the change in weights, n is the learning rate, X is the presynaptic input rate, and Y is the postsynaptic output rate
-//LTD can be approximated by applying a z for a non-hebbian learning rate in place of a multiplication by x and y
-
-    int x = 0;
-    int y = 0;
-    float maxWeight = 1.0;
-    float n = hebbianFactor;
-
-    x = (firingRates[preID][0] + firingRates[preID][1] + firingRates[preID][2]) / 3;
-    y = (firingRates[postID][0] + firingRates[postID][1] + firingRates[postID][2]) / 3;
-
-
-
-    for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
-        if (c.cellularMatrix[i].cellID == postID) {                         //if the current cell in the matrix has the same ID ad postID
-            for (int j = 0; j < c.cellularMatrix[i].inputsLen; j++) {       //iterate over all inputs in that cell
-                if (c.cellularMatrix[i].inputs[j] == preID) {               //if the current input has the same ID as preID
-
-                    if (c.cellularMatrix[preID].cellOutput && c.cellularMatrix[postID].cellOutput) {
-                        if (c.cellularMatrix[i].weights[j] <= maxWeight) c.cellularMatrix[i].weights[j] += (x*y*n);
-                    }
-                }
-            }
-        }
-    }
-}
+float calculateRandomWeight();
+void useGlia(int cmdNeuronID, bool desiredState);
+void glialWeightTuning();
+bool getCellOutputFromMatrix(int targetID);
+neuron getNeuronFromMatrix(int targetID);
+int getCellThresholdFromMatrix(int targetID);
+int getCellInputLenFromMatrix(int targetID);
+int getInputFromMatrix(int neuronID, int inputID);
+int getCellWeightLenFromMatrix(int targetID);
+float getWeightFromMatrix(int neuronID, int weightID);
+void updateOutputArray(int cellID, bool outputVal);
+void neuronToString(neuron n);
+neuron stringToNeuron(int id);
+void adjustTuningVars();
+bool diagnosticTool();
+void LTD(int preID, int postID);
+void hebbian(int preID, int postID);
 
 /*
 Array that reads in neuron info from an input file
@@ -957,3 +377,14 @@ neuron neuralList[] = {
     stringToNeuron(301),
     stringToNeuron(302)
 };
+
+
+void printCellularMatrix();
+void printMotorRatios();
+void printCmdInterneurons();
+bool activationFunction(int cellID);
+void doLearning();
+void setNextState();
+void saveNewState();
+void connectomeInit();
+
