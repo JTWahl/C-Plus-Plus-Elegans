@@ -1,20 +1,25 @@
-const static int neuronCount = 302; //constants used by network
-const int maxSynapse = 500;
-const int matrixHeight = 17;
-const int matrixWidth = 18;
-const int commandInterneuronSize = 8;
-const float threshold = 1;
+#ifndef NEURONS_H
+#define NEURONS_H
 
-bool avblActive = false;        //output check variables
-bool avbrActive = false;
-bool pvclActive = false;
-bool pvcrActive = false;
-bool avalActive = false;
-bool avarActive = false;
-bool avdlActive = false;
-bool avdrActive = false;
-bool avelActive = false;
-bool averActive = false;
+#include <iostream>
+
+extern const int neuronCount; //constants used by network
+extern const int maxSynapse;
+extern const int matrixHeight;
+extern const int matrixWidth;
+extern const int commandInterneuronSize;
+extern const float threshold;
+
+extern bool avblActive;        //output check variables
+extern bool avbrActive;
+extern bool pvclActive;
+extern bool pvcrActive;
+extern bool avalActive;
+extern bool avarActive;
+extern bool avdlActive;
+extern bool avdrActive;
+extern bool avelActive;
+extern bool averActive;
 
 /*
 Struct definition for a neuron object
@@ -22,9 +27,9 @@ Struct definition for a neuron object
 struct neuron {
    int cellID;										//the assigned ID for the cell
    int threshold;									//the activation threshold of the cell
-   int inputs[maxSynapse];				//list of IDs of the connected pre-synaptic neurons to the current neuron
+   int inputs[500];				//list of IDs of the connected pre-synaptic neurons to the current neuron
    int inputsLen;									//length of a neuron's inputs array
-   float weights[maxSynapse];				//list of weights for every pre-synaptic input for the given neuron
+   float weights[500];				//list of weights for every pre-synaptic input for the given neuron
    int weightsLen;									//length of a neuron's weights array
    bool cellOutput;									//holds the output value for the cell as determined by connectome object
 };
@@ -33,12 +38,12 @@ struct neuron {
 Struct definition for a connectome object
 */
 struct connectome {
-    neuron cellularMatrix[neuronCount];
-    bool outputs[neuronCount];
+    neuron cellularMatrix[302];
+    bool outputs[302];
 };
 
 
-connectome c;   //constructs a connectome object
+extern connectome c;   //constructs a connectome object
 
 
 #define ADAL 1  //list of all neuron names defined by their ID number for ease of use
@@ -344,3 +349,4 @@ connectome c;   //constructs a connectome object
 #define VD8 301
 #define VD9 302
 
+#endif // NEURONS_H

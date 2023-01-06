@@ -1,4 +1,6 @@
 #include "neuronIO.h"
+#include "neurons.h"
+#include "connectome.h"
 
 /*
 Function to activate nose touch sense
