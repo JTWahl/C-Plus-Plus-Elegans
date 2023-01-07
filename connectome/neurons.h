@@ -2,6 +2,17 @@
 #define NEURONS_H
 
 #include <iostream>
+#include <vector>
+#include <sstream>
+//#include <ctime>
+#include <string>
+#include <fstream>
+#include <algorithm>
+#include <cstdlib>
+//#include <windows.h>
+//#include <unistd.h>
+#include <cmath>
+
 
 extern const int neuronCount; //constants used by network
 extern const int maxSynapse;

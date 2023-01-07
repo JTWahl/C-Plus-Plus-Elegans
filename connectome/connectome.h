@@ -3,19 +3,10 @@
 
 #include "neurons.h"
 #include "neuronIO.h"
-#include <sstream>
-#include <ctime>
-#include <string>
-#include <fstream>
-#include <algorithm>
-#include <cstdlib>
-#include <windows.h>
-#include <unistd.h>
-#include <cmath>
 
 using namespace std;
 
-ofstream matrixFile;    //sets up an output stream object
+//ofstream matrixFile;    //sets up an output stream object
 
 extern bool noseTouchActive;    //input check variables
 extern bool lightAvoidanceActive;
@@ -31,7 +22,7 @@ extern int firingRates[302][3];   //makes an array to hold output firing data
 extern int diagnosticCellID;               //global variables for the diagnostic tool
 extern int diagnosticOutputID;
 extern int diagnosticWeightList[302];
-extern float diagnosticOutputList[302];
+extern int diagnosticOutputList[302];
 extern bool beginDiagnostic;
 
 extern int hebbianMax;                   //adjustable learning attributes
@@ -57,7 +48,7 @@ struct connectome;
 
 inline float calculateRandomWeight();
 inline void useGlia(int cmdNeuronID, bool desiredState);
-inline void glialWeightTuning();
+extern void glialWeightTuning();
 inline bool getCellOutputFromMatrix(int targetID);
 inline neuron getNeuronFromMatrix(int targetID);
 inline int getCellThresholdFromMatrix(int targetID);
@@ -78,10 +69,10 @@ inline void printCellularMatrix();
 inline void printMotorRatios();
 inline void printCmdInterneurons();
 inline bool activationFunction(int cellID);
-inline void doLearning();
-inline void setNextState();
-inline void saveNewState();
-inline void connectomeInit();
-inline void printToTerminal();
+extern void doLearning();
+extern void setNextState();
+extern void saveNewState();
+extern void connectomeInit();
+extern void printToTerminal();
 
 #endif // CONNECTOME_H

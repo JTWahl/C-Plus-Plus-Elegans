@@ -5,7 +5,7 @@
 /*
 Main function that runs connectome in a loop
 */
-int main(){
+int main() {
     connectomeInit();                           //initialize connectome
 
     while (true) {

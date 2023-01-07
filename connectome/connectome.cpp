@@ -35,13 +35,15 @@ bool chemorepulsionActive = false;
 bool saltSensingActive = false;
 bool basalForagingActive = false;
 
-string motorFileLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
-string sensoryLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
-string matrixLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
+string motorFileLocation = "C:/Users/green/OneDrive/Jojo/c++/C-Plus-Plus-Elegans/connectome/motorOutputs.txt";
+string sensoryLocation = "C:/Users/green/OneDrive/Jojo/c++/C-Plus-Plus-Elegans/connectome/sensoryInputs.txt";
+string matrixLocation = "C:/Users/green/OneDrive/Jojo/c++/C-Plus-Plus-Elegans/connectome/cellularMatrixData.txt";
+
+ofstream matrixOutFile;
 
 connectome c;
 
-neuron neuralList[] = {
+neuron neuralList[302] = {
     stringToNeuron(1),
     stringToNeuron(2),
     stringToNeuron(3),
@@ -374,7 +376,7 @@ Function used by main glial weight tuning function to adjust weights of cells in
 */
 void useGlia(int cmdNeuronID, bool desiredState) {
     float glialFactor = .75;         //the amount we adjust weights by
-    float minAdjust = .1;
+    double minAdjust = 0.1;
     float maxAdjust = 1;
 
     for (int i = 0; i < c.cellularMatrix[cmdNeuronID].inputsLen; i++) {         //iterate over all inputs of command interneuron
@@ -541,33 +543,39 @@ void neuronToString(neuron n) {
     stringstream cellOutputStr;
     cellOutputStr << n.cellOutput;
 
-    stringstream inputsStr[n.inputsLen] = {};
-    stringstream weightsStr[n.weightsLen] = {};
+    //    stringstream inputsStr[n.inputsLen] = {};
+    //    stringstream weightsStr[n.weightsLen] = {};
+
+    vector<stringstream> inputsStr;
+    vector<stringstream> weightsStr;
+
+    inputsStr[n.inputsLen] = {};
+    weightsStr[n.weightsLen] = {};
 
     for (int i = 0; i < n.inputsLen; i++) {
-        inputsStr[i] << n.inputs[i];
-        weightsStr[i] << n.weights[i];
+        inputsStr.at(i) << n.inputs[i];
+        weightsStr.at(i) << n.weights[i];
     }
 
-    matrixFile << cellIDStr.rdbuf() << endl;
-    matrixFile << thresholdStr.rdbuf() << endl;
-    matrixFile << inputLenStr.rdbuf() << endl;
+    matrixOutFile << cellIDStr.rdbuf() << endl;
+    matrixOutFile << thresholdStr.rdbuf() << endl;
+    matrixOutFile << inputLenStr.rdbuf() << endl;
     for (int i = 0; i < n.inputsLen; i++) {
-        matrixFile << inputsStr[i].rdbuf() << endl;
+        matrixOutFile << inputsStr.at(i).rdbuf() << endl;
     }
-    matrixFile << weightLenStr.rdbuf() << endl;
+    matrixOutFile << weightLenStr.rdbuf() << endl;
     for (int i = 0; i < n.weightsLen; i++) {
-        matrixFile << weightsStr[i].rdbuf() << endl;
+        matrixOutFile << weightsStr.at(i).rdbuf() << endl;
     }
-    matrixFile << cellOutputStr.rdbuf() << endl;
-    matrixFile << ',' << endl;
+    matrixOutFile << cellOutputStr.rdbuf() << endl;
+    matrixOutFile << ',' << endl;
 }
 
 /*
 Function to convert a string from input file into a neuron object to read in information
 */
 neuron stringToNeuron(int id) {
-    ifstream matrixFile;
+    ifstream matrixInFile;
 
     neuron n;
     neuron x;
@@ -580,78 +588,68 @@ neuron stringToNeuron(int id) {
     x.weights[0] = {};
     x.cellOutput = 0;
 
-    int maxSynapse = 500;
-
     string cellIDStr;
     string thresholdStr;
     string inputsLenStr;
-    string inputsStr[maxSynapse];
+    string inputsStr[500];
     string weightsLenStr;
-    string weightsStr[maxSynapse];
+    string weightsStr[500];
     string cellOutputStr;
     string data = "";
 
-    matrixFile.open(matrixLocation);
+    matrixInFile.open(matrixLocation);
 
     for (int j = 1; j <= id; j++) {
-        if (getline(matrixFile, data, '\n')) cellIDStr = data;
+        if (getline(matrixInFile, data, '\n')) cellIDStr = data;
         stringstream idcell (cellIDStr);
         idcell >> n.cellID;
         //cout << "Cell ID: " << cellIDStr << endl;
 
-        if (getline(matrixFile, data, '\n')) thresholdStr = data;
+        if (getline(matrixInFile, data, '\n')) thresholdStr = data;
         stringstream threshold (thresholdStr);
         threshold >> n.threshold;
         //cout << "Threshold: " << thresholdStr << endl;
 
-        if (getline(matrixFile, data, '\n')) inputsLenStr = data;
+        if (getline(matrixInFile, data, '\n')) inputsLenStr = data;
         stringstream inputLen (inputsLenStr);
         inputLen >> n.inputsLen;
         //cout << "Input Len: " << inputsLenStr << endl;
 
         for (int i = 0; i < n.inputsLen; i++) {
-            if (getline(matrixFile, data, '\n')) inputsStr[i] = data;
+            if (getline(matrixInFile, data, '\n')) inputsStr[i] = data;
             stringstream inputs (inputsStr[i]);
             inputs >> n.inputs[i];
             //cout << "Input IDs: " << inputsStr[i] << endl;
         }
 
-        if (getline(matrixFile, data, '\n')) weightsLenStr = data;
+        if (getline(matrixInFile, data, '\n')) weightsLenStr = data;
         stringstream weightLen (weightsLenStr);
         weightLen >> n.weightsLen;
         //cout << "Weight Len: " << weightsLenStr << endl;
 
 
         for (int i = 0; i < n.weightsLen; i++) {
-            if (getline(matrixFile, data, '\n')) weightsStr[i] = data;
+            if (getline(matrixInFile, data, '\n')) weightsStr[i] = data;
             stringstream weights (weightsStr[i]);
             weights >> n.weights[i];
             //n.weights[i] = calculateRandomWeight();
             //cout << "Weights: " << weightsStr[i] << endl;
         }
 
-        if (getline(matrixFile, data, '\n')) cellOutputStr = data;
+        if (getline(matrixInFile, data, '\n')) cellOutputStr = data;
         stringstream cellOutput (cellOutputStr);
         cellOutput >> n.cellOutput;
         //cout << "Output: " << cellOutputStr << endl;
 
-        if (getline(matrixFile, data, '\n')) string delim = data;
+        if (getline(matrixInFile, data, '\n')) string delim = data;
 
         if (j == id) {
             return n;
         }
     }
 
-    matrixFile.close();
+    matrixInFile.close();
 
-/*    cout << "ID: " << n.cellID << endl;
-    cout << "THRESHOLD: " << n.threshold << endl;
-    cout << "INPUT LEN: " << n.inputsLen << endl;
-    cout << "WEIGHT LEN: " << n.weightsLen << endl;
-    cout << "INPUTS: " << n.inputs << endl;
-    cout << "WEIGHTS: " << n.weights << endl;
-    cout << "OUTPUT: " << n.cellOutput << endl;
-*/
     return x;
 }
 
@@ -947,22 +945,22 @@ void printMotorRatios() {
     int DBsum = 0;
 
     //backward ventral locomotion motor neurons
-    int motorNeuronAVentral[VAcount] = {
+    int motorNeuronAVentral[12] = {
       VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8, VA9, VA10, VA11, VA12
     };
 
     //forward ventral locomotion motor neurons
-    int motorNeuronBVentral[VBcount] = {
+    int motorNeuronBVentral[11] = {
       VB1, VB2, VB3, VB4, VB5, VB6, VB7, VB8, VB9, VB10, VB11
     };
 
     //backward dorsal locomotion motor neurons
-    int motorNeuronADorsal[DAcount] = {
+    int motorNeuronADorsal[9] = {
       DA1, DA2, DA3, DA4, DA5, DA6, DA7, DA8, DA9
     };
 
     //forward dorsal locomotion motor neurons
-    int motorNeuronBDorsal[DBcount] = {
+    int motorNeuronBDorsal[7] = {
       DB1, DB2, DB3, DB4, DB5, DB6, DB7
     };
 
@@ -1127,8 +1125,13 @@ Function to calculate if a given cell fires. Takes a cells ID, outputs a boolean
 bool activationFunction (int cellID) {          	                    //activation function calculator-- it tells you what output the weighted inputs into the given neuron make
     int inputLen = c.cellularMatrix[cellID].inputsLen;                   //get the length of the input and weight matrix for a given neuron
     float finalSummation = 0.0;                                         //initalize function to hold final sum(Xi * Wi)
-    float neuronWeights[inputLen] = {};                               //make matrix for all cells weights
-    int neuronInputs[inputLen] = {};                                  //make matrix for all cells inputs
+    //float neuronWeights[inputLen] = {};                               //make matrix for all cells weights
+    //int neuronInputs[inputLen] = {};                                  //make matrix for all cells inputs
+    vector<float> neuronWeights;
+    vector<int> neuronInputs;
+
+    neuronWeights[inputLen] = {};
+    neuronInputs[inputLen] = {};
 
     for (int i = 0; i < inputLen; i++) {
         neuronWeights[i] = getWeightFromMatrix(cellID, i);              //update matrix to hold all cell weights for a given neuron
@@ -1137,9 +1140,12 @@ bool activationFunction (int cellID) {          	                    //activatio
         //cout << "inputs: " << neuronInputs[i] << endl;
     }
 
-    float productMatrix[inputLen];                                   //make a maktrix to hold all multiplied sums
+    //float productMatrix[inputLen];                                   //make a maktrix to hold all multiplied sums
+    vector<float> productMatrix;
+    productMatrix[inputLen] = {};
 
-    bool inputValues[inputLen] = {};                                    //make an array to hold all boolean values for each presynaptic neuron input
+    vector<bool> inputValues; // bool inputValues[inputLen] = {};                                    //make an array to hold all boolean values for each presynaptic neuron input
+    inputValues[inputLen] = {};
 
     for (int i = 0; i < inputLen; i++) {                                //iterate over the length of presynaptic inputs
         inputValues[i] = c.cellularMatrix[neuronInputs[i]].cellOutput;  //fill the presynaptic boolean matrix with every output value for each presynaptic neuron
@@ -1175,8 +1181,9 @@ Function for doing hebbian learning with each applicable neuron in the network
 */
 void doLearning() {
     int hebbianCap = hebbianMax;   //variable to hold competitive maximum value for hebbian learning adjustments
-    float rateSums[neuronCount] = {};   //variable to hold the sums of the firing rates for each neuron
-    int maxRateIDs[hebbianCap] = {};            //declare array of IDs of neurons with highest rates
+    float rateSums[302] = {};   //variable to hold the sums of the firing rates for each neuron
+    vector<int> maxRateIDs;
+    maxRateIDs[hebbianCap] = {};            //declare array of IDs of neurons with highest rates
 
     for (int i = 0; i < neuronCount; i++) {
         rateSums[i] = 0;
@@ -1187,7 +1194,7 @@ void doLearning() {
     }
 
     for (int i = 0; i < neuronCount; i++) {     //iterate over entire connectome
-        rateSums[i] = (firingRates[i][0] + firingRates[i][1] + firingRates[i][2]) / 3;  //calculate the firing rate of the current neuron
+        rateSums[i] = (float)(firingRates[i][0] + firingRates[i][1] + firingRates[i][2]) / 3;  //calculate the firing rate of the current neuron
         for (int j = hebbianCap - 1; j > 0; j--) {                                     //iterate over list of max rates starting from top
             //if the current neurons firing rate is bigger than the current max rate IDs rate then set it to the new neuron
             if (rateSums[i] > rateSums[maxRateIDs[j]]) maxRateIDs[j] = i;
@@ -1238,13 +1245,13 @@ void setNextState() {                  			        //function to update values in
 Function to save the current state of the connectomes cellular matrix to the matrix file.
 */
 void saveNewState() {
-    matrixFile.open(matrixLocation);      //open the file
+    matrixOutFile.open(matrixLocation);      //open the file
 
     for (int i = 0; i < neuronCount; i++) {
         neuronToString(c.cellularMatrix[i]);
     }
 
-    matrixFile.close();
+    matrixOutFile.close();
 }
 
 /*
@@ -1280,5 +1287,27 @@ void printToTerminal() {
     printMotorRatios();                     //print the motor cells out
     printCmdInterneurons();                 //print out the command interneurons
     //adjustTuningVars();
-    sleep(1);
+    //sleep(1);
 }
+
+
+/*
+Main function that runs connectome in a loop
+*/
+/*int main() {
+    connectomeInit();                           //initialize connectome
+
+    while (true) {
+        getSensoryInputs();                     //get updated sensory information from a file
+        setNextState();                         //update to next tick of connectome
+        doLearning();                           //run hebbian algorithm
+        glialWeightTuning();                    //do error correction on the outputs based on input types
+        saveNewState();                         //save the state of the connectome
+
+        printToTerminal();
+    }
+    //while (diagnosticTool());                        //while it's true run the connectome diagnostic tool
+
+    return 0;
+}
+*/
