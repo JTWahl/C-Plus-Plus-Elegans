@@ -39,6 +39,8 @@ string motorFileLocation = "C:/Users/t420/Desktop/custom-elegans-network/connect
 string sensoryLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
 string matrixLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
 
+ofstream matrixFile;    //sets up an output stream object
+
 connectome c;
 
 neuron neuralList[] = {

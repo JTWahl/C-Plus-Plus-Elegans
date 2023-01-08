@@ -15,8 +15,6 @@
 
 using namespace std;
 
-ofstream matrixFile;    //sets up an output stream object
-
 extern bool noseTouchActive;    //input check variables
 extern bool lightAvoidanceActive;
 extern bool gentleTouchForwardActive;
@@ -57,7 +55,7 @@ struct connectome;
 
 inline float calculateRandomWeight();
 inline void useGlia(int cmdNeuronID, bool desiredState);
-inline void glialWeightTuning();
+extern void glialWeightTuning();
 inline bool getCellOutputFromMatrix(int targetID);
 inline neuron getNeuronFromMatrix(int targetID);
 inline int getCellThresholdFromMatrix(int targetID);
@@ -78,10 +76,10 @@ inline void printCellularMatrix();
 inline void printMotorRatios();
 inline void printCmdInterneurons();
 inline bool activationFunction(int cellID);
-inline void doLearning();
-inline void setNextState();
-inline void saveNewState();
-inline void connectomeInit();
-inline void printToTerminal();
+extern void doLearning();
+extern void setNextState();
+extern void saveNewState();
+extern void connectomeInit();
+extern void printToTerminal();
 
 #endif // CONNECTOME_H

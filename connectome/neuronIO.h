@@ -12,6 +12,6 @@ inline void doThermotaxis();
 inline void doChemorepulsion();
 inline void doSaltSensing();
 inline void doBasalForaging();
-inline void getSensoryInputs();
+extern void getSensoryInputs();
 
 #endif // NEURONIO_H
