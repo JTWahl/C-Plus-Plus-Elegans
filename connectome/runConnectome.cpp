@@ -1,3 +1,17 @@
+//TODO: for some reason rebooting connectome fixes erratic behaviors? try implementing an occasional reboot perhaps?
+//TODO: add the rest of the senses to the glial programs supervised learning function
+//TODO: implement a reverse polarized ASER?
+//TODO: build a robot for wormy
+
+/*
+PROJECT CREDITS
+
+    Project Leads: JoJo Wahl, Molly Camp
+    Consultation and Debugging: Eonn Penalver, Kaiz Akhtar
+    Date - Dec. 2022
+
+*/
+
 #include "connectome.h"
 #include "neuronIO.h"
 #include "neurons.h"

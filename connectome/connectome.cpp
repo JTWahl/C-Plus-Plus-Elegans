@@ -1,26 +1,10 @@
-//TODO: do division by five on all weights in dataset and save it that way
-//TODO: figure out how to implement ASER, as it is supposed to be always on and only off in presence of stimuli
-//TODO: for some reason rebooting connectome fixes erratic behaviors? try implementing an occasional reboot perhaps?
-//TODO: potentially implement forgetting of connection weights (to zero?) that no innervataed by any firing neurons after x number of ticks
-//TODO: add the rest of the senses to the glial programs supervised learning function
-//TODO: build a robot for wormy
-
-/*
-PROJECT CREDITS
-
-    Project Leads: JoJo Wahl, Molly Camp
-    Consultation and Debugging: Eonn Penalver, Kaiz Akhtar
-    Date - Dec. 2022
-
-*/
-
 #include "neurons.h"
 #include "connectome.h"
 #include "neuronIO.h"
 
 int hebbianMax = 220;                   //adjustable learning attributes
-float hebbianFactor = .75;                  //220, .75, .25 works well
-float LTDfactor = .25;
+float hebbianFactor = .01;              //220, .75, .25????
+float LTDfactor = .15;                   //220, .01, .1 seems to work well
 
 int diagnosticCellID = 0;
 int diagnosticOutputID = 0;
@@ -32,8 +16,7 @@ bool gentleTouchBackwardActive = false;
 bool harshTouchActive = false;
 bool thermotaxisActive = false;
 bool chemorepulsionActive = false;
-bool saltSensingActive = false;
-bool basalForagingActive = false;
+bool chemoattractionActive = false;
 
 string motorFileLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
 string sensoryLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
@@ -44,6 +27,7 @@ ofstream matrixFile;    //sets up an output stream object
 connectome c;
 
 neuron neuralList[] = {
+    stringToNeuron(0),
     stringToNeuron(1),
     stringToNeuron(2),
     stringToNeuron(3),
@@ -344,8 +328,7 @@ neuron neuralList[] = {
     stringToNeuron(298),
     stringToNeuron(299),
     stringToNeuron(300),
-    stringToNeuron(301),
-    stringToNeuron(302)
+    stringToNeuron(301)
 };
 
 int firingRates[302][3];
@@ -375,9 +358,9 @@ float calculateRandomWeight() {
 Function used by main glial weight tuning function to adjust weights of cells innervating command neurons to a desired state
 */
 void useGlia(int cmdNeuronID, bool desiredState) {
-    float glialFactor = .75;         //the amount we adjust weights by
-    float minAdjust = .1;
-    float maxAdjust = 1;
+    float glialFactor = .74; //.74         //the amount we adjust weights by
+    float minAdjust = .1; //.1
+    float maxAdjust = 1; //1
 
     for (int i = 0; i < c.cellularMatrix[cmdNeuronID].inputsLen; i++) {         //iterate over all inputs of command interneuron
         int targetNeuronID = c.cellularMatrix[cmdNeuronID].inputs[i];           //get the ID of the current command neuron input
@@ -398,70 +381,68 @@ Function to tune weights using a VERY rough abstraction of neuroglia's genetic e
 */
 void glialWeightTuning() {
     //USE CASE 1 - check to see if command cells are off and input says they should be on
-        if (noseTouchActive && !c.cellularMatrix[FLPL - 1].cellOutput) useGlia(FLPL - 1, true); //for nose touch
-        if (noseTouchActive && !c.cellularMatrix[FLPR - 1].cellOutput) useGlia(FLPR - 1, true);
+        if (noseTouchActive && !c.cellularMatrix[FLPL].cellOutput) useGlia(FLPL, true); //for nose touch
+        if (noseTouchActive && !c.cellularMatrix[FLPR].cellOutput) useGlia(FLPR, true);
 
-        if (lightAvoidanceActive && !c.cellularMatrix[ASHL - 1].cellOutput) useGlia (ASHL - 1, true); //for light avoidance
-        if (lightAvoidanceActive && !c.cellularMatrix[ASHR - 1].cellOutput) useGlia (ASHR - 1, true);
-        if (lightAvoidanceActive && !c.cellularMatrix[ASJL - 1].cellOutput) useGlia (ASJL - 1, true);
-        if (lightAvoidanceActive && !c.cellularMatrix[ASJR - 1].cellOutput) useGlia (ASJR - 1, true);
-        if (lightAvoidanceActive && !c.cellularMatrix[AWBL - 1].cellOutput)useGlia (AWBL - 1, true);
-        if (lightAvoidanceActive && !c.cellularMatrix[AWBR - 1].cellOutput)useGlia (AWBR - 1, true);
-        if (lightAvoidanceActive && !c.cellularMatrix[ASKL - 1].cellOutput)useGlia (ASKL - 1, true);
-        if (lightAvoidanceActive && !c.cellularMatrix[ASKR - 1].cellOutput)useGlia (ASKR - 1, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[ASHL].cellOutput) useGlia (ASHL, true); //for light avoidance
+        if (lightAvoidanceActive && !c.cellularMatrix[ASHR].cellOutput) useGlia (ASHR, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[ASJL].cellOutput) useGlia (ASJL, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[ASJR].cellOutput) useGlia (ASJR, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[AWBL].cellOutput)useGlia (AWBL, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[AWBR].cellOutput)useGlia (AWBR, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[ASKL].cellOutput)useGlia (ASKL, true);
+        if (lightAvoidanceActive && !c.cellularMatrix[ASKR].cellOutput)useGlia (ASKR, true);
 
-        if (gentleTouchForwardActive && !c.cellularMatrix[AIML - 1].cellOutput) useGlia(AIML - 1, true); //for gentle forward
-        if (gentleTouchForwardActive && !c.cellularMatrix[ALMR - 1].cellOutput) useGlia(ALMR - 1, true);
-        if (gentleTouchForwardActive && !c.cellularMatrix[PLML - 1].cellOutput) useGlia(PLML - 1, true);
-        if (gentleTouchForwardActive && !c.cellularMatrix[PLMR - 1].cellOutput) useGlia(PLMR - 1, true);
-        if (gentleTouchForwardActive && !c.cellularMatrix[AVM - 1].cellOutput) useGlia(AVM - 1, true);
+        if (gentleTouchForwardActive && !c.cellularMatrix[AIML].cellOutput) useGlia(AIML, true); //for gentle forward
+        if (gentleTouchForwardActive && !c.cellularMatrix[ALMR].cellOutput) useGlia(ALMR, true);
+        if (gentleTouchForwardActive && !c.cellularMatrix[PLML].cellOutput) useGlia(PLML, true);
+        if (gentleTouchForwardActive && !c.cellularMatrix[PLMR].cellOutput) useGlia(PLMR, true);
+        if (gentleTouchForwardActive && !c.cellularMatrix[AVM].cellOutput) useGlia(AVM, true);
 
-        if (gentleTouchBackwardActive && !c.cellularMatrix[AVM - 1].cellOutput) useGlia(AVM - 1, true); //for gentle backward
-        if (gentleTouchBackwardActive && !c.cellularMatrix[ALML - 1].cellOutput) useGlia(ALML - 1, true);
-        if (gentleTouchBackwardActive && !c.cellularMatrix[ALMR - 1].cellOutput) useGlia(ALMR - 1, true);
+        if (gentleTouchBackwardActive && !c.cellularMatrix[AVM].cellOutput) useGlia(AVM, true); //for gentle backward
+        if (gentleTouchBackwardActive && !c.cellularMatrix[ALML].cellOutput) useGlia(ALML, true);
+        if (gentleTouchBackwardActive && !c.cellularMatrix[ALMR].cellOutput) useGlia(ALMR, true);
 
-        if (harshTouchActive && !c.cellularMatrix[PLML - 1].cellOutput) useGlia(PLML - 1, true); //for harsh touch
-        if (harshTouchActive && !c.cellularMatrix[PLMR - 1].cellOutput) useGlia(PLMR - 1, true);
+        if (harshTouchActive && !c.cellularMatrix[PLML].cellOutput) useGlia(PLML, true); //for harsh touch
+        if (harshTouchActive && !c.cellularMatrix[PLMR].cellOutput) useGlia(PLMR, true);
 
-        if (thermotaxisActive && !c.cellularMatrix[AFDL - 1].cellOutput) useGlia(AFDL - 1, true); //for thermotaxis
-        if (thermotaxisActive && !c.cellularMatrix[AFDR - 1].cellOutput) useGlia(AFDR - 1, true);
-        if (thermotaxisActive && !c.cellularMatrix[AIMR - 1].cellOutput) useGlia(AIMR - 1, true);
-        if (thermotaxisActive && !c.cellularMatrix[PHCL - 1].cellOutput) useGlia(PHCL - 1, true);
-        if (thermotaxisActive && !c.cellularMatrix[PHCR - 1].cellOutput) useGlia(PHCR - 1, true);
+        if (thermotaxisActive && !c.cellularMatrix[AFDL].cellOutput) useGlia(AFDL, true); //for thermotaxis
+        if (thermotaxisActive && !c.cellularMatrix[AFDR].cellOutput) useGlia(AFDR, true);
+        if (thermotaxisActive && !c.cellularMatrix[AIMR].cellOutput) useGlia(AIMR, true);
+        if (thermotaxisActive && !c.cellularMatrix[PHCL].cellOutput) useGlia(PHCL, true);
+        if (thermotaxisActive && !c.cellularMatrix[PHCR].cellOutput) useGlia(PHCR, true);
 
-        if (chemorepulsionActive && !c.cellularMatrix[PHAL - 1].cellOutput) useGlia(PHAL - 1, true); //for chemorepulsion
-        if (chemorepulsionActive && !c.cellularMatrix[PHAR - 1].cellOutput) useGlia(PHAR - 1, true);
-        if (chemorepulsionActive && !c.cellularMatrix[PHBL - 1].cellOutput) useGlia(PHBL - 1, true);
-        if (chemorepulsionActive && !c.cellularMatrix[PHBR - 1].cellOutput) useGlia(PHBR - 1, true);
+        if (chemorepulsionActive && !c.cellularMatrix[PHAL].cellOutput) useGlia(PHAL, true); //for chemorepulsion
+        if (chemorepulsionActive && !c.cellularMatrix[PHAR].cellOutput) useGlia(PHAR, true);
+        if (chemorepulsionActive && !c.cellularMatrix[PHBL].cellOutput) useGlia(PHBL, true);
+        if (chemorepulsionActive && !c.cellularMatrix[PHBR].cellOutput) useGlia(PHBR, true);
 
-        if (saltSensingActive && !c.cellularMatrix[ASEL - 1].cellOutput) useGlia(ASEL - 1, true);
-
-        if (basalForagingActive && c.cellularMatrix[ASER - 1].cellOutput) useGlia(ASER - 1, false);
-
+        if (chemoattractionActive && !c.cellularMatrix[ASEL].cellOutput) useGlia(ASEL, true);
+        if (chemoattractionActive && !c.cellularMatrix[ASER].cellOutput) useGlia(ASER, true);
 
     //USE CASE 2 - check to see if the wrong outputs are on for a given input
         if (noseTouchActive) {
             //check if going forward: avbl/r, pvcl/r
-            if (c.cellularMatrix[AVBL - 1].cellOutput) useGlia(AVBL - 1, false);
-            if (c.cellularMatrix[AVBR - 1].cellOutput) useGlia(AVBR - 1, false);
-            if (c.cellularMatrix[PVCL - 1].cellOutput) useGlia(PVCL - 1, false);
-            if (c.cellularMatrix[PVCR - 1].cellOutput) useGlia(PVCR - 1, false);
+            if (c.cellularMatrix[AVBL].cellOutput) useGlia(AVBL, false);
+            if (c.cellularMatrix[AVBR].cellOutput) useGlia(AVBR, false);
+            if (c.cellularMatrix[PVCL].cellOutput) useGlia(PVCL, false);
+            if (c.cellularMatrix[PVCR].cellOutput) useGlia(PVCR, false);
         }
 
         if (gentleTouchForwardActive) {
             //check if going backwards: aval/r, avdl/r
-            if (c.cellularMatrix[AVAL - 1].cellOutput) useGlia(AVAL - 1, false);
-            if (c.cellularMatrix[AVAR - 1].cellOutput) useGlia(AVAR - 1, false);
-            if (c.cellularMatrix[AVDL - 1].cellOutput) useGlia(AVDL - 1, false);
-            if (c.cellularMatrix[AVDR - 1].cellOutput) useGlia(AVDR - 1, false);
+            if (c.cellularMatrix[AVAL].cellOutput) useGlia(AVAL, false);
+            if (c.cellularMatrix[AVAR].cellOutput) useGlia(AVAR, false);
+            if (c.cellularMatrix[AVDL].cellOutput) useGlia(AVDL, false);
+            if (c.cellularMatrix[AVDR].cellOutput) useGlia(AVDR, false);
         }
 
         if (gentleTouchBackwardActive) {
             //check if going forward: avbl/r, pvcl/r
-            if (c.cellularMatrix[AVBL - 1].cellOutput) useGlia(AVBL - 1, false);
-            if (c.cellularMatrix[AVBR - 1].cellOutput) useGlia(AVBR - 1, false);
-            if (c.cellularMatrix[PVCL - 1].cellOutput) useGlia(PVCL - 1, false);
-            if (c.cellularMatrix[PVCR - 1].cellOutput) useGlia(PVCR - 1, false);
+            if (c.cellularMatrix[AVBL].cellOutput) useGlia(AVBL, false);
+            if (c.cellularMatrix[AVBR].cellOutput) useGlia(AVBR, false);
+            if (c.cellularMatrix[PVCL].cellOutput) useGlia(PVCL, false);
+            if (c.cellularMatrix[PVCR].cellOutput) useGlia(PVCR, false);
         }
 //TODO: still need to do rest of senses for this use case
 }
@@ -858,7 +839,7 @@ bool diagnosticTool() {
 Function to do long term depression on a given synapse
 */
 void LTD(int preID, int postID) {
-    float minWeight = -1.0;
+    float minWeight = -1.0; //-1
     float z = LTDfactor;
 
     for (int i = 0; i < neuronCount; i++) {                                 //iterate over entire network
@@ -884,7 +865,7 @@ void hebbian(int preID, int postID) {
 
     int x = 0;
     int y = 0;
-    float maxWeight = 1.0;
+    float maxWeight = 1.0; //1
     float n = hebbianFactor;
 
     x = (firingRates[preID][0] + firingRates[preID][1] + firingRates[preID][2]) / 3;
@@ -1253,7 +1234,7 @@ void saveNewState() {
 Function to set up the connectome matrix and array that holds output firing data for the hebbian function
 */
 void connectomeInit() {
-    for (int i = 0; i <= neuronCount; i++) {    //for every neuron in the network
+    for (int i = 0; i < neuronCount; i++) {    //for every neuron in the network
         c.cellularMatrix[i] = neuralList[i];    //load the neuron from a file into the matrix of the connectome
 
         c.cellularMatrix[i].cellOutput = false;
@@ -1263,16 +1244,16 @@ void connectomeInit() {
         }
     }
 
-    for (int i = 0; i < neuronCount; i++) {
+/*    for (int i = 0; i < neuronCount; i++) {
         for (int j = 0; j < c.cellularMatrix[i].weightsLen; j++) {
             //float weightRaw = c.cellularMatrix[i].weights[j];
             //float weightOffset = .17;
             //c.cellularMatrix[i].weights[j] = (pow(weightRaw, (1/3))/3) + weightOffset;
             //c.cellularMatrix[i].weights[j] /= 5;
 
-            c.cellularMatrix[i].inputs[j] = c.cellularMatrix[i].inputs[j] - 1;
+            c.cellularMatrix[i].inputs[j] -= 1;
         }
-    }
+    }*/
 }
 
 

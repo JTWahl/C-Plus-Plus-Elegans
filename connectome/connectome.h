@@ -22,8 +22,7 @@ extern bool gentleTouchBackwardActive;
 extern bool harshTouchActive;
 extern bool thermotaxisActive;
 extern bool chemorepulsionActive;
-extern bool saltSensingActive;
-extern bool basalForagingActive;
+extern bool chemoattractionActive;
 
 extern int firingRates[302][3];   //makes an array to hold output firing data
 extern int diagnosticCellID;               //global variables for the diagnostic tool
@@ -35,6 +34,7 @@ extern bool beginDiagnostic;
 extern int hebbianMax;                   //adjustable learning attributes
 extern float hebbianFactor;                  //220, .75, .25 works well
 extern float LTDfactor;
+extern float forgetFactor;
 
     //280, .1, .5 without glia is pretty good, but still not quite activated enough
         //same with 50, .5, .5, okay but not active enough...
@@ -71,12 +71,12 @@ inline bool diagnosticTool();
 inline void LTD(int preID, int postID);
 inline void hebbian(int preID, int postID);
 
-
 inline void printCellularMatrix();
 inline void printMotorRatios();
 inline void printCmdInterneurons();
 inline bool activationFunction(int cellID);
 extern void doLearning();
+extern void doForgetting();
 extern void setNextState();
 extern void saveNewState();
 extern void connectomeInit();
