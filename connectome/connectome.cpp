@@ -951,25 +951,25 @@ void printMotorRatios() {
 
 
     for (int i = 0; i < VAcount; i++) {
-        if (c.cellularMatrix[motorNeuronAVentral[i] - 1].cellOutput) {
+        if (c.cellularMatrix[motorNeuronAVentral[i]].cellOutput) {
             VAsum++;
         }
     }
 
     for (int i = 0; i < VBcount; i++) {
-        if (c.cellularMatrix[motorNeuronBVentral[i] - 1].cellOutput) {
+        if (c.cellularMatrix[motorNeuronBVentral[i]].cellOutput) {
             VBsum++;
         }
     }
 
     for (int i = 0; i < DAcount; i++) {
-        if (c.cellularMatrix[motorNeuronADorsal[i] - 1].cellOutput) {
+        if (c.cellularMatrix[motorNeuronADorsal[i]].cellOutput) {
             DAsum++;
         }
     }
 
     for (int i = 0; i < DBcount; i++) {
-        if (c.cellularMatrix[motorNeuronBDorsal[i] - 1].cellOutput) {
+        if (c.cellularMatrix[motorNeuronBDorsal[i]].cellOutput) {
             DBsum++;
         }
     }

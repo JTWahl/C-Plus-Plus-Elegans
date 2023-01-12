@@ -1,3 +1,6 @@
+//TODO: fix diagnostic tool... change header type to extern?
+//TODO: get rid of output attribute for connectome... just use neurons' outputs!
+//TODO: get rid of neural list, just use the cellularmatrix and build a loop in a function to fill it up
 //TODO: for some reason rebooting connectome fixes erratic behaviors? try implementing an occasional reboot perhaps?
 //TODO: add the rest of the senses to the glial programs supervised learning function
 //TODO: implement a reverse polarized ASER?
