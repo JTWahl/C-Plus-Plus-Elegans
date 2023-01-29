@@ -18,9 +18,13 @@ bool thermotaxisActive = false;
 bool chemorepulsionActive = false;
 bool chemoattractionActive = false;
 
-string motorFileLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
-string sensoryLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
-string matrixLocation = "C:/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
+//string motorFileLocation = "/motorOutputs.txt";
+//string sensoryLocation = "/sensoryInputs.txt";
+//string matrixLocation = "/cellularMatrixData.txt";
+
+string motorFileLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/executable-connectome/motorOutputs.txt";
+string sensoryLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/executable-connectome/sensoryInputs.txt";
+string matrixLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/executable-connectome/cellularMatrixData.txt";
 
 ofstream matrixFile;    //sets up an output stream object
 

@@ -30,7 +30,7 @@ int main(){
         setNextState();                         //update to next tick of connectome
         doLearning();                           //run hebbian algorithm
         glialWeightTuning();                    //do error correction on the outputs based on input types
-        //saveNewState();                         //save the state of the connectome
+        saveNewState();                         //save the state of the connectome
 
         printToTerminal();
     }
