@@ -1,48 +1,19 @@
-//#include <iostream>
-#include <fstream>
-#include <string>
-#include <wiringPi.h>
+//run the connectome.exe on startup!
+//run this code on start up!
 
-ofstream sensoryFile;
-ifstream motorFile;
-
-string motorFileLocation = "";
-string sensoryFileLocation = "";
-
-using namespace std;
-
-#define LEFT_MOTOR_PIN 0
-#define RIGHT_MOTOR_PIN 1
-#define NOSE_SENSOR_PIN 2
-#define LIGHT_SENSOR_PIN 3
-#define FRONT_BUTTON_PIN 4
-#define BACK_BUTTON_PIN 5
-#define HARSH_BUTTON_PIN 6
-#define TEMP_SENSOR_PIN 21
-#define CHEMOREPULSION_PIN 22
-#define SALT_SENSOR_PIN 23
-
-int main() {
-	wiringPiSetup();
-	pinMode(LEFT_MOTOR_PIN, OUTPUT);
-	pinMode(RIGHT_MOTOR_PIN, OUTPUT);
-	pinMode(NOSE_SENSOR_PIN, INPUT);
-	pinMode(LIGHT_SENSOR_PIN, INPUT);
-	pinMode(FRONT_BUTTON_PIN, INPUT);
-	pinMode(BACK_BUTTON_PIN, INPUT);
-	pinMode(HARSH_BUTTON_PIN, INPUT);
-	pinMode(TEMP_SENSOR_PIN, INPUT);
-	pinMode(CHEMOREPULSION_PIN, INPUT);
-	pinMode(SALT_SENSOR_PIN, INPUT);
+void setup() {
+	//init sensory file
+	//init motor file
+	//init sensor output variables
+	//init raw motor variables
+	//init motor objects
+}
 
 
-	while (TRUE) {
-		//read in from motor file
-		//update motors accordingly
-
-		//read in from sensors
-		//output info to sensory file		
-	}
-
-	return 0;
+void loop() {
+	//run the connectome
+	//get information from the sensors on gpio
+	//get information from the motor file
+	//based on sensor information update the sensory file accordingly
+	//based on motor file information, output to motors accordingly
 }

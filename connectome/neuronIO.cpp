@@ -1,153 +1,98 @@
 #include "neuronIO.h"
+#include "neurons.h"
+#include "connectome.h"
 
 /*
-Function to activate nose touch sense
+Activates nose touch sense
 */
 void doNoseTouch() {
-		for (int j = 0; j < neuronCount; j++) {
-            int id = c.cellularMatrix[j].cellID + 1;
-            //if nosetouch neuron is in cellular matrix then set output to true
-            if (id == 114 || id == 115) {
-                c.cellularMatrix[j].cellOutput = true;
-                noseTouchActive = true;
-                //cout << "Nose Touch Active?: " << noseTouchActive << endl;
-            }
-        }
+    noseTouchActive = true;     //set variable to true so other functions know nose touch sense is happening
+    c.cellularMatrix[FLPL].cellOutput = true;       //set the neurons for this sense to true
+    c.cellularMatrix[FLPR].cellOutput = true;
 }
 
 /*
-Function to activate light avoidance sense
+Activates light avoidance sense
 */
 void doLightAvoidance() {
-		for (int j = 0; j < neuronCount; j++) {
-                int id = c.cellularMatrix[j].cellID + 1;
-            //if light avoidance neuron is in cellular matrix then set output to true
-                if (id == 44 || id == 45 || id == 48 || id == 49 || id == 75 || id == 76 || id == 50 || id == 51) {
-                    c.cellularMatrix[j].cellOutput = true;
-                    lightAvoidanceActive = true;
-                }
-		}
+    lightAvoidanceActive = true;
+    c.cellularMatrix[ASHL].cellOutput = true;
+    c.cellularMatrix[ASHR].cellOutput = true;
+    c.cellularMatrix[ASJL].cellOutput = true;
+    c.cellularMatrix[ASJR].cellOutput = true;
+    c.cellularMatrix[AWBL].cellOutput = true;
+    c.cellularMatrix[AWBR].cellOutput = true;
+    c.cellularMatrix[ASKL].cellOutput = true;
+    c.cellularMatrix[ASKR].cellOutput = true;
 }
 
 /*
-Function to activate gentle forward provoking touch sense
+Activates gentle forward provoking touch sense
 */
 void doGentleForwardTouch() {
-		for (int j = 0; j < neuronCount; j++) {
-			//if gentletouch neuron is in cellular matrix then set output to true
-                int id = c.cellularMatrix[j].cellID + 1;
-				if (id == 24 || id == 25 || id == 168 || id == 169 || id == 72) {
-                    c.cellularMatrix[j].cellOutput = true;
-                    gentleTouchForwardActive = true;
-				}
-		}
+    gentleTouchForwardActive = true;
+    c.cellularMatrix[ALML].cellOutput = true;
+    c.cellularMatrix[ALMR].cellOutput = true;
+    c.cellularMatrix[PLML].cellOutput = true;
+    c.cellularMatrix[PLMR].cellOutput = true;
+    c.cellularMatrix[AVM].cellOutput = true;
 }
 
 /*
-Function to activate gentle backward provoking touch sense
+Activates gentle backward provoking touch sense
 */
 void doGentleBackwardTouch() {
-        for (int j = 0; j < neuronCount; j++) {
-            int id = c.cellularMatrix[j].cellID + 1;
-            if (id == AVM || id == ALML || id == ALMR) {
-
-                c.cellularMatrix[j].cellOutput = true;
-                gentleTouchBackwardActive = true;
-            }
-        }
+    gentleTouchBackwardActive = true;
+    c.cellularMatrix[AVM].cellOutput = true;
+    c.cellularMatrix[ALML].cellOutput = true;
+    c.cellularMatrix[ALMR].cellOutput = true;
 }
 
 /*
-Function to activate harsh touch sense
+Activates harsh touch sense
 */
 void doHarshTouch() {
-		for (int j = 0; j < neuronCount; j++) {
-			//if harshtouch neuron is in cellular matrix then set output to true
-                int id = c.cellularMatrix[j].cellID + 1;
-                if (id == PLML || id == PLMR) {
-                    c.cellularMatrix[j].cellOutput = true;
-                    harshTouchActive = true;
-                }
-		}
+    harshTouchActive = true;
+    c.cellularMatrix[PLML].cellOutput = true;
+    c.cellularMatrix[PLMR].cellOutput = true;
 }
 
 /*
-Function to activate thermotaxis sense
+Activates thermotaxis sense
 */
 void doThermotaxis() {
-		for (int j = 0; j < neuronCount; j++) {
-			//if thermotaxis neuron is in cellular matrix then set output to true
-                int id = c.cellularMatrix[j].cellID + 1;
-                if (id == 9 || id == 10 || id == 16 || id == 166 || id == 167) {
-                    c.cellularMatrix[j].cellOutput = true;
-                    thermotaxisActive = true;
-                }
-		}
+    thermotaxisActive = true;
+    c.cellularMatrix[AFDL].cellOutput = true;
+    c.cellularMatrix[AFDR].cellOutput = true;
+    c.cellularMatrix[AIMR].cellOutput = true;
+    c.cellularMatrix[PHCL].cellOutput = true;
+    c.cellularMatrix[PHCR].cellOutput = true;
 }
 
 /*
-Function to activate chemorepulsive sense
+Activates chemorepulsive sense
 */
 void doChemorepulsion() {
-		for (int j = 0; j < neuronCount; j++) {
-			//if chemorepulsion neuron is in cellular matrix then set output to true
-               int id = c.cellularMatrix[j].cellID + 1;
-                if (id == 162 || id == 163 || id == 164 || id == 165) {
-                    c.cellularMatrix[j].cellOutput = true;
-                    chemorepulsionActive = true;
-                }
-		}
+    chemorepulsionActive = true;
+    c.cellularMatrix[PHAL].cellOutput = true;
+    c.cellularMatrix[PHAR].cellOutput = true;
+    c.cellularMatrix[PHBL].cellOutput = true;
+    c.cellularMatrix[PHBR].cellOutput = true;
 }
 
 /*
-Function to activate salt sensing neurons
+Activates salt sensing neurons
 */
-void doSaltSensing() {
-		for (int j = 0; j < neuronCount; j++) {
-			//if salt sensing neuron is in cellular matrix then set output to true
-                int id = c.cellularMatrix[j].cellID + 1;
-                if (id == ASEL) {
-                    c.cellularMatrix[j].cellOutput = true;
-                    saltSensingActive = true;
-                }
-		}
+void doChemoattraction() {
+    chemoattractionActive = true;
+    c.cellularMatrix[ASEL].cellOutput = true;
+    c.cellularMatrix[ASER].cellOutput = true;
 }
 
 /*
-Function to do basal foraging response
+Initializes all sensory neuron outputs to false
 */
-void doBasalForaging() {
-    for (int j = 0; j < neuronCount; j++) {
-        //if basal response inhibiting neuron is in cellular matrix then set output to true
-            int id = c.cellularMatrix[j].cellID + 1;
-            if (id == ASER) {
-                //c.cellularMatrix[j].cellOutput = false;
-                c.cellularMatrix[j].cellOutput = true;
-                basalForagingActive = true;
-            }
-    }
-}
-
-/*
-Function to read in sensor data from a file to be used by connectome to activate corresponding sensory neurons
-*/
-void getSensoryInputs() {
-    ifstream sensoryIOfile;
-
-    //read from file -- if functions say to activate a sensory modality, then call that function
-    sensoryIOfile.open(sensoryLocation);
-
-    string data = "";
-    string isNoseTouch = "";
-    string isLightAvoidance = "";
-    string isGentleTouchForward = "";
-    string isGentleTouchBackward = "";
-    string isHarshTouch = "";
-    string isThermotaxis = "";
-    string isChemorepulsion = "";
-    string isSaltSensing = "";
-    string isBasalForaging = "";
-
+void initSensesOff() {
     noseTouchActive = false;
     lightAvoidanceActive = false;
     gentleTouchForwardActive = false;
@@ -155,18 +100,66 @@ void getSensoryInputs() {
     harshTouchActive = false;
     thermotaxisActive = false;
     chemorepulsionActive = false;
-    saltSensingActive = false;
-    basalForagingActive = false;
+    chemoattractionActive = false;
 
-    for (int i = 0; i < 7 && !sensoryIOfile.eof(); i++) {
-        getline(sensoryIOfile, data);
-        isNoseTouch = data;
+    c.cellularMatrix[FLPL].cellOutput = false;
+    c.cellularMatrix[FLPR].cellOutput = false;
+    c.cellularMatrix[ASHL].cellOutput = false;
+    c.cellularMatrix[ASHR].cellOutput = false;
+    c.cellularMatrix[ASJL].cellOutput = false;
+    c.cellularMatrix[ASJR].cellOutput = false;
+    c.cellularMatrix[AWBL].cellOutput = false;
+    c.cellularMatrix[AWBR].cellOutput = false;
+    c.cellularMatrix[ASKL].cellOutput = false;
+    c.cellularMatrix[ASKR].cellOutput = false;
+    c.cellularMatrix[ALML].cellOutput = false;
+    c.cellularMatrix[ALMR].cellOutput = false;
+    c.cellularMatrix[AVM].cellOutput = false;
+    c.cellularMatrix[PLML].cellOutput = false;
+    c.cellularMatrix[PLMR].cellOutput = false;
+    c.cellularMatrix[AFDL].cellOutput = false;
+    c.cellularMatrix[AFDR].cellOutput = false;
+    c.cellularMatrix[AIMR].cellOutput = false;
+    c.cellularMatrix[PHCL].cellOutput = false;
+    c.cellularMatrix[PHCR].cellOutput = false;
+    c.cellularMatrix[PHAL].cellOutput = false;
+    c.cellularMatrix[PHAR].cellOutput = false;
+    c.cellularMatrix[PHBL].cellOutput = false;
+    c.cellularMatrix[PHBR].cellOutput = false;
+    c.cellularMatrix[ASEL].cellOutput = false;
+    c.cellularMatrix[ASER].cellOutput = false;
+}
 
-        getline(sensoryIOfile, data);
-        isLightAvoidance = data;
+/*
+Reads in sensor data from a file to be used by connectome to activate corresponding sensory neurons
+*/
+void getSensoryInputs() {
+    ifstream sensoryIOfile;     //set up an input stream object
 
-        getline(sensoryIOfile, data);
-        isGentleTouchForward = data;
+    //read from file -- if functions say to activate a sensory modality, then call that function
+    sensoryIOfile.open(sensoryLocation);
+
+    initSensesOff();             //initialize sensory neurons to off
+
+    string data = "";            //create empty string variables to hold the data from the file being read
+    string isNoseTouch = "";
+    string isLightAvoidance = "";
+    string isGentleTouchForward = "";
+    string isGentleTouchBackward = "";
+    string isHarshTouch = "";
+    string isThermotaxis = "";
+    string isChemorepulsion = "";
+    string isChemoattraction = "";
+
+    if (!sensoryIOfile.eof()) {     //if the end of the file isn't reached
+        getline(sensoryIOfile, data);   //read in a line of the file and assign it to the placeholder string 'data'
+        isNoseTouch = data;             //set the nose touch sense string for the first line equal to the data read in
+
+        getline(sensoryIOfile, data);   //reapeat the process, rewrite the old data variable with line two
+        isLightAvoidance = data;        //set line two's data to the string for light avoidance sense
+
+        getline(sensoryIOfile, data);   //repeat again
+        isGentleTouchForward = data;    //etc.
 
         getline(sensoryIOfile, data);
         isGentleTouchBackward = data;
@@ -181,48 +174,41 @@ void getSensoryInputs() {
         isChemorepulsion = data;
 
         getline(sensoryIOfile, data);
-        isSaltSensing = data;
-
-        getline(sensoryIOfile, data);
-        isBasalForaging = data;
-
-        if (isNoseTouch == "1") {
-            doNoseTouch();
-        }
-
-        if (isLightAvoidance == "1") {
-            doLightAvoidance();
-        }
-
-        if (isGentleTouchForward == "1") {
-            doGentleForwardTouch();
-        }
-
-        if (isGentleTouchBackward == "1") {
-            doGentleBackwardTouch();
-        }
-
-        if (isHarshTouch == "1") {
-            doHarshTouch();
-        }
-
-        if (isThermotaxis == "1") {
-            doThermotaxis();
-        }
-
-        if (isChemorepulsion == "1") {
-            doChemorepulsion();
-        }
-
-        if (isSaltSensing == "1") {
-            doSaltSensing();
-        }
-
-        if (isBasalForaging == "1") {
-            doBasalForaging();
-        }
+        isChemoattraction = data;
     }
 
-    sensoryIOfile.close();
+    if (isNoseTouch == "1") {       //if the nose touch variable was read in as a 1
+        doNoseTouch();              //activate nose touch function
+    }
+
+    if (isLightAvoidance == "1") {  //and so on and so forth for all the other senses
+        doLightAvoidance();
+    }
+
+    if (isGentleTouchForward == "1") {  //etc.
+        doGentleForwardTouch();
+    }
+
+    if (isGentleTouchBackward == "1") {
+        doGentleBackwardTouch();
+    }
+
+    if (isHarshTouch == "1") {
+        doHarshTouch();
+    }
+
+    if (isThermotaxis == "1") {
+        doThermotaxis();
+    }
+
+    if (isChemorepulsion == "1") {
+        doChemorepulsion();
+    }
+
+    if (isChemoattraction == "1") {
+        doChemoattraction();
+    }
+
+    sensoryIOfile.close();      //close the input file
 }
 

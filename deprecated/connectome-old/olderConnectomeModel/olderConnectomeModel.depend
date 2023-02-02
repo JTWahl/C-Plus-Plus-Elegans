@@ -1,0 +1,41 @@
+# depslib dependency file v1.0
+1675284432 source:c:\users\t420\desktop\custom-elegans-network\connectome-old\connectome.cpp
+	"neurons.h"
+	"connectome.h"
+	"neuronIO.h"
+
+1675283920 c:\users\t420\desktop\custom-elegans-network\connectome-old\neurons.h
+	<istream>
+	<iostream>
+
+1675283920 c:\users\t420\desktop\custom-elegans-network\connectome-old\connectome.h
+	"neurons.h"
+	"neuronIO.h"
+	<sstream>
+	<ctime>
+	<string>
+	<fstream>
+	<algorithm>
+	<cstdlib>
+	<windows.h>
+	<unistd.h>
+	<cmath>
+
+1675283920 c:\users\t420\desktop\custom-elegans-network\connectome-old\neuronio.h
+	"connectome.h"
+
+1675283920 source:c:\users\t420\desktop\custom-elegans-network\connectome-old\neuronio.cpp
+	"neuronIO.h"
+	"neurons.h"
+	"connectome.h"
+
+1675283920 source:c:\users\t420\desktop\custom-elegans-network\connectome-old\neurons.cpp
+	"neurons.h"
+	"connectome.h"
+	"neuronIO.h"
+
+1675284350 source:c:\users\t420\desktop\custom-elegans-network\connectome-old\runconnectome.cpp
+	"connectome.h"
+	"neuronIO.h"
+	"neurons.h"
+
