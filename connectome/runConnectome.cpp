@@ -10,7 +10,6 @@
 
 /**Final Steps**/
     //TODO: generate executable with proper filepath
-    //TODO: push changes to github master branch
     //TODO: make a version that works as a library without the runConnectome.cpp file
     //TODO: build a robot for wormy
 

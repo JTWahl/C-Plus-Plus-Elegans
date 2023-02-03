@@ -769,6 +769,82 @@ bool activationFunction (int cellID) {          	                    //activatio
 }
 
 /*
+Activation function to be used for cells that are also sensory
+*/
+bool activationFunctionSensory (int cellID) {
+    bool senseIsOn = false;                                             //flag for if the sense the cell belongs to is on
+    int inputLen = c.cellularMatrix[cellID].inputsLen;                   //get the length of the input and weight matrix for a given neuron
+    float finalSummation = 0.0;                                         //initalize function to hold final sum(Xi * Wi)
+    float neuronWeights[inputLen] = {};                               //make matrix for all cells weights
+    int neuronInputs[inputLen] = {};                                  //make matrix for all cells inputs
+    bool inputValues[inputLen] = {};                                    //make an array to hold all boolean values for each presynaptic neuron input
+    float productMatrix[inputLen] = {};                                   //make a maktrix to hold all multiplied sums
+
+    for (int i = 0; i < inputLen; i++) {
+        neuronWeights[i] = c.cellularMatrix[cellID].weights[i];         //update matrix to hold all cell weights for a given neuron
+        neuronInputs[i] = c.cellularMatrix[cellID].inputs[i];           //update matrix to hold all cell input IDs for a given neurons presynapses
+    }
+
+    for (int i = 0; i < inputLen; i++) {                                //iterate over the length of presynaptic inputs
+        inputValues[i] = c.cellularMatrix[neuronInputs[i]].cellOutput;  //fill the presynaptic boolean matrix with every output value for each presynaptic neuron
+    }
+
+    for (int i = 0; i < inputLen; i++) {                              //iterate over all possible connections
+        productMatrix[i] = neuronWeights[i] * inputValues[i];           //fill a matrix with the product of the Wi and Xi values
+    }
+
+    for (int i = 0; i < inputLen; i++) {		                        //iterate over the length of presynaptic inputs
+        finalSummation += productMatrix[i];		                        //for every input add the product matrix to a running sum
+    }
+
+    //check what sense this cell belongs to and see if that sense is on
+    if (noseTouchActive) {
+        if (cellID == FLPL || cellID == FLPR) senseIsOn = true;
+    }
+
+    if (lightAvoidanceActive) {
+        if (cellID == ASHL || cellID == ASHR || cellID == ASJL || cellID == ASJR || cellID == AWBL || cellID == AWBR || cellID == ASKL || cellID == ASKR) senseIsOn = true;
+    }
+
+    if (gentleTouchBackwardActive) {
+        if (cellID == AVM || cellID == ALML || cellID == ALMR) senseIsOn = true;
+    }
+
+    if (gentleTouchForwardActive) {
+        if (cellID == PLML || cellID == PLMR || cellID == AVM || cellID == ALML || cellID == ALMR) senseIsOn = true;
+    }
+
+    if (harshTouchActive) {
+        if (cellID == PLML || cellID == PLMR) senseIsOn = true;
+    }
+
+    if (thermotaxisActive) {
+        if (cellID == AFDL || cellID == AFDR || cellID == AIMR || cellID == PHCL || cellID == PHCR) senseIsOn = true;
+    }
+
+    if (chemorepulsionActive) {
+        if (cellID == PHAL || cellID == PHAR || cellID == PHBL || cellID == PHBR) senseIsOn = true;
+    }
+
+    if (chemoattractionActive) {
+        if (cellID == ASEL || cellID == ASER) senseIsOn = true;
+    }
+
+    //if sensory input for this cell is on, add 1 to final summation
+    if (senseIsOn) finalSummation += 1.0;
+
+    if (finalSummation < threshold) {       //if the running sum is less than the given neurons threshold
+        return false;
+    } else {
+        firingRates[cellID][0] = firingRates[cellID][1];
+        firingRates[cellID][1] = firingRates[cellID][2];
+        firingRates[cellID][2] = 1;
+
+        return true;
+    }
+}
+
+/*
 Function for doing hebbian learning and LTD with each applicable neuron in the network
 */
 void doLearning() {
@@ -839,13 +915,23 @@ Sets the next tick of the connectome.
 */
 void setNextState() {                  			        //function to update values in connectome to next state using the activation function
   for (int i = 0; i < neuronCount; i++) {		        //for every cell in the connectome
-      if (!isSensoryNeuron(i)) {
-            bool activationVal = activationFunction(i);
+      if (!isSensoryNeuron(i)) {                        //check if neuron is a sensory neuron
+            bool activationVal = activationFunction(i); //if it is not do the activation function
 
             if (activationVal) {						        //if the activation function of that cell returns true
                 c.cellularMatrix[i].cellOutput = true;								//save its output in the connectomes output matrix as true
             } else {
                 c.cellularMatrix[i].cellOutput = false;								//otherwise save it as false
+            }
+      } else {                                          //if it is a sensory neuron
+            if (c.cellularMatrix[i].inputsLen > 0) {    //check if it is also an interneuron by seeing if the input length is above zero
+                bool activationVal = activationFunctionSensory(i);     //do the sensory activation function
+
+                if (activationVal) {
+                    c.cellularMatrix[i].cellOutput = true;
+                } else {
+                    c.cellularMatrix[i].cellOutput = false;
+                }
             }
       }
   }
