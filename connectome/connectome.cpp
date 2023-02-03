@@ -20,17 +20,17 @@ bool thermotaxisActive = false;
 bool chemorepulsionActive = false;
 bool chemoattractionActive = false;
 
-//string motorFileLocation = "/motorOutputs.txt";       //specifies IO file locations as in same directory as code
-//string sensoryLocation = "/sensoryInputs.txt";
-//string matrixLocation = "/cellularMatrixData.txt";
+string motorFileLocation = "./motorOutputs.txt";       //specifies IO file locations as in same directory as code
+string sensoryLocation = "./sensoryInputs.txt";
+string matrixLocation = "./cellularMatrixData.txt";
 
 //string motorFileLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/executable-connectome/motorOutputs.txt";
 //string sensoryLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/executable-connectome/sensoryInputs.txt";
 //string matrixLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/executable-connectome/cellularMatrixData.txt";
 
-string motorFileLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
-string sensoryLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
-string matrixLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
+//string motorFileLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/motorOutputs.txt";
+//string sensoryLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/sensoryInputs.txt";
+//string matrixLocation = "/Users/t420/Desktop/custom-elegans-network/connectome/cellularMatrixData.txt";
 
 
 ofstream matrixFile;            //sets up an output stream object
